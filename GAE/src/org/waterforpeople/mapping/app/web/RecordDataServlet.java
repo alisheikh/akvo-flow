@@ -106,7 +106,7 @@ public class RecordDataServlet extends AbstractRestApiServlet {
 			QuestionDao qDao = new QuestionDao();
 			List<Survey> surveyList = sDao.listSurveysByProject(projectId);
 			List<Question> QuestionList= new ArrayList<Question>();
-			// get all the questions from all the surveys, and add them to surveyQuestionList
+			// get all the questions from all the surveys in the project, and add them to surveyQuestionList
 			if (surveyList != null && surveyList.size() > 0){
 				for (Survey s : surveyList){
 					List<Question> questions = qDao.listQuestionsBySurvey(s.getKey().getId());
@@ -116,6 +116,8 @@ public class RecordDataServlet extends AbstractRestApiServlet {
 				}
 			}
 
+			// for each question which has a metric, put an item in the metaDto
+			// with questionId, metricName, metricId and includeInList
 			RecordsMetaDto metaDto = new RecordsMetaDto();
 			MetricDao mDao = new MetricDao();
 			if (QuestionList.size() > 0){
@@ -123,11 +125,13 @@ public class RecordDataServlet extends AbstractRestApiServlet {
 					if (q.getMetricId() != null){
 						Metric m = mDao.getByKey(q.getMetricId());
 						String mName = m != null ? m.getName() : "";
-						metaDto.addItem(q.getKey().getId(), mName, q.getIncludeInList());
+						Long mId = m!= null ? m.getKey().getId() : null;
+						metaDto.addItem(q.getKey().getId(), mName, mId, q.getIncludeInList());
 					}
 				}
 			}
 
+			// put all the surveyedLocales in the result dto
 			SurveyedLocaleDao slDao = new SurveyedLocaleDao();
 			for (SurveyedLocale sl : slList) {
 				RecordDataDto dto = new RecordDataDto();
@@ -137,14 +141,12 @@ public class RecordDataServlet extends AbstractRestApiServlet {
 				dto.setLon(sl.getLongitude());
 
 				// for each question which has a metric, get the latest surveyalValue
-				// with that surveyedLocaleId and questionId and order by time desc
-				// FIXME this should be done through metrics as well, as we want to include
-				// FIXME the latest value for a certain metric, regardless of which question made it
+				// with that surveyedLocaleId and metricId and order by time desc
 				if (QuestionList.size() > 0){
 					for (Question q : QuestionList){
 						// only include questions which have a metric
 						if (q.getMetricId() != null){
-							List<SurveyalValue> sv = slDao.listValuesByLocaleAndQuestion(sl.getKey().getId(),q.getKey().getId());
+							List<SurveyalValue> sv = slDao.listValuesByLocaleAndMetric(sl.getKey().getId(),q.getMetricId());
 							if (sv != null && sv.size() > 0) {
 								if (!sv.get(0).getQuestionType().equals("GEO")
 										&& !sv.get(0).getQuestionType().equals("IMAGE")) {

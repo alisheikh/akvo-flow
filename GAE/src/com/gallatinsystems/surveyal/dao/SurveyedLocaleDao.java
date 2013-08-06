@@ -149,7 +149,27 @@ public class SurveyedLocaleDao extends BaseDAO<SurveyedLocale> {
 		
 	}
 
-	
+	@SuppressWarnings("unchecked")
+	public List<SurveyalValue> listValuesByLocaleAndMetric(Long surveyedLocaleId, Long metricId) {
+		PersistenceManager pm = PersistenceFilter.getManager();
+		javax.jdo.Query query = pm.newQuery(SurveyalValue.class);
+		StringBuilder filterString = new StringBuilder();
+		StringBuilder paramString = new StringBuilder();
+		Map<String, Object> paramMap = null;
+		paramMap = new HashMap<String, Object>();
+
+		appendNonNullParam("surveyedLocaleId", filterString, paramString, "String",
+				surveyedLocaleId, paramMap);
+		appendNonNullParam("metricId", filterString, paramString, "String",
+				metricId, paramMap);
+		query.setOrdering("collectionDate desc");
+		query.setFilter(filterString.toString());
+		query.declareParameters(paramString.toString());
+		List<SurveyalValue> results = (List<SurveyalValue>) query
+				.executeWithMap(paramMap);
+		return results;
+	}
+
 	/**
 	 * lists locales by projectId
 	 * 
