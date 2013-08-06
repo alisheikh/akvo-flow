@@ -16,6 +16,9 @@
 
 package com.gallatinsystems.survey.device.service;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.Semaphore;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -23,6 +26,7 @@ import java.net.URLEncoder;
 import org.apache.http.HttpException;
 import org.json.JSONObject;
 import org.json.JSONArray;
+import org.ocpsoft.prettytime.PrettyTime;
 
 import android.app.Activity;
 import android.app.IntentService;
@@ -208,6 +212,16 @@ public class RecordDataService extends IntentService {
 					String uniqueId = recordItemArr.getJSONObject(i).getString("id").toString();
 					Log.v(TAG,"processing " + uniqueId);
 					String lastSDate = recordItemArr.getJSONObject(i).getString("lastSDate").toString();
+
+					SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
+					Long lastSDateUnix;
+					try {
+						Date date = formatter.parse(lastSDate);
+						lastSDateUnix = date.getTime();
+					} catch (ParseException e) {
+						lastSDateUnix = null;
+					}
+
 					try {
 						lat = Double.parseDouble(recordItemArr.getJSONObject(i).getString("lat").toString());
 						lon = Double.parseDouble(recordItemArr.getJSONObject(i).getString("lon").toString());

@@ -18,7 +18,12 @@ package com.gallatinsystems.survey.device.domain;
 
 import java.io.Serializable;
 import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+
+import org.ocpsoft.prettytime.PrettyTime;
 
 public class SurveyedLocale implements Serializable {
 	private static final long serialVersionUID = -545828029643355078L;
@@ -29,8 +34,8 @@ public class SurveyedLocale implements Serializable {
 	private String projectId;
 	private List<String> metricNames;
 	private List<String> metricValues;
-	private String lastSubmittedDate;
 	private String localeUniqueId;
+	private Date lastSubmittedDate;
 	private int status;
 	private Double distance;
 
@@ -74,12 +79,12 @@ public class SurveyedLocale implements Serializable {
 		this.localeUniqueId = localeUniqueId;
 	}
 
-	public String getLastSubmittedDate() {
+	public Date getLastSubmittedDate() {
 		return lastSubmittedDate;
 	}
 
-	public void setLastSubmittedDate(String lastSubmittedDate) {
-		this.lastSubmittedDate = lastSubmittedDate;
+	public void setLastSubmittedDate(Long date) {
+		this.lastSubmittedDate = new Date(date);
 	}
 
 	public int getStatus() {
@@ -109,13 +114,14 @@ public class SurveyedLocale implements Serializable {
 				df = new DecimalFormat("#"); // only whole meters
 			} 		
 			double dist = distance * factor;
-			builder.append(".    dist: ").append(df.format(dist)).append(unit).append("\n");
-		} else {
-			builder.append(".    dist: unknown\n") ;
+			builder.append("    ").append(df.format(dist)).append(unit).append("\n");
 		}
 
 		if (getLastSubmittedDate() != null){
-			builder.append("Last updated: ").append(getLastSubmittedDate());
+			PrettyTime p = new PrettyTime();
+		    String displayString;
+			displayString = p.format(lastSubmittedDate);
+			builder.append("updated: ").append(displayString);
 		}
 
 		if (metricNames != null && metricNames.size() > 0){
