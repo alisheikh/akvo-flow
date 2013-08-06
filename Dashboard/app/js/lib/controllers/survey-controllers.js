@@ -66,10 +66,10 @@ FLOW.languageControl = Ember.Object.create({
     label: "English",
     value: "en"
   }), Ember.Object.create({
-    label: "Español",
+    label: "Espanol",
     value: "es"
   }), Ember.Object.create({
-    label: "Français",
+    label: "Francais",
     value: "fr"
   })]
 });
@@ -323,7 +323,7 @@ FLOW.questionControl = Ember.ArrayController.create({
   }.observes('FLOW.selectedControl.selectedSurvey'),
 
   setQGcontent: function() {
-	  var qId
+	  var qId;
     if(FLOW.selectedControl.get('selectedQuestionGroup') && FLOW.selectedControl.selectedSurvey.get('keyId') > 0) {
       var qId = FLOW.selectedControl.selectedQuestionGroup.get('keyId');
       this.set('content', FLOW.store.filter(FLOW.Question, function(item) {
