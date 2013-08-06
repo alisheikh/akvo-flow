@@ -6,10 +6,14 @@ FLOW.SurveySidebarView = FLOW.View.extend({
 	surveyPointType: null,
 	language: null,
 	isDirty: false,
+	project:null,
+	projectName:null,
+	projectAlreadyExists:false,
 
 	init: function() {
 		var pointType = null,
-			language = null;
+			language = null,
+			project = null;
 		this._super();
 		this.set('surveyTitle', FLOW.selectedControl.selectedSurvey.get('name'));
 		this.set('surveyDescription', FLOW.selectedControl.selectedSurvey.get('description'));
@@ -20,6 +24,14 @@ FLOW.SurveySidebarView = FLOW.View.extend({
 			}
 		});
 		this.set('surveyPointType', pointType);
+
+		// set the project to the original choice
+		FLOW.projectControl.get('content').forEach(function(item) {
+			if(item.get('keyId') == FLOW.selectedControl.selectedSurvey.get('projectId')) {
+				project = item;
+			}
+		});
+		this.set('project', project);
 
 		FLOW.languageControl.get('content').forEach(function(item) {
 			if(item.get('value') == FLOW.selectedControl.selectedSurvey.get('defaultLanguageCode')) {
@@ -81,6 +93,27 @@ FLOW.SurveySidebarView = FLOW.View.extend({
 		return FLOW.questionGroupControl.content.toArray().length;
 	}.property('FLOW.questionGroupControl.content.@each'),
 
+	clearNewProjectField: function () {
+		if (!Ember.none(this.get('project'))){
+			this.set('projectName',null);
+		}
+	}.observes('project'),
+
+	checkProjectAlreadyExists: function () {
+		var projects, currentProjectName;
+		if (!Ember.empty(this.get('projectName'))) {
+			this.set('project',null);
+		}
+		this.set('projectAlreadyExists',false);
+		currentProjectName = this.get('projectName');
+		projects = FLOW.store.filter(FLOW.Project, function(item){
+			return currentProjectName == item.get('name');
+		});
+		if (!Ember.none(projects) && projects.content.length > 0){
+			this.set('projectAlreadyExists',true);
+		}
+	}.observes('projectName'),
+
 	doSaveSurvey: function() {
 		var survey;
 		// validation
@@ -99,6 +132,11 @@ FLOW.SurveySidebarView = FLOW.View.extend({
 		survey.set('status', 'NOT_PUBLISHED');
 		survey.set('path', FLOW.selectedControl.selectedSurveyGroup.get('code'));
 		survey.set('description', this.get('surveyDescription'));
+		survey.set('newProjectName', this.get('projectName'));
+
+		if(!Ember.none(this.get('project'))){
+			survey.set('projectId', this.project.get('keyId'));
+		}
 		if(this.get('surveyPointType') !== null) {
 			survey.set('pointType', this.surveyPointType.get('value'));
 		} else {

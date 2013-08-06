@@ -41,9 +41,10 @@ FLOW.SurveyGroup = FLOW.BaseModel.extend({
   })
 });
 
-
 FLOW.Survey = FLOW.BaseModel.extend({
-  didLoad: function() {
+	// this is just to make the sideloading work properly
+	projects: DS.hasMany('FLOW.Project'),
+	didLoad: function() {
     // set the survey group name
     var sg = FLOW.store.find(FLOW.SurveyGroup, this.get('surveyGroupId'));
     if(!Ember.empty(sg)) {
@@ -66,6 +67,7 @@ FLOW.Survey = FLOW.BaseModel.extend({
   createdDateTime: DS.attr('number'),
   lastUpdateDateTime: DS.attr('number'),
   instanceCount: DS.attr('number'),
+  newProjectName: DS.attr('string'),
 
   // This attribute is used for the 'Copy Survey' functionality
   // Most of the times is `null`
@@ -290,9 +292,14 @@ FLOW.Metric = FLOW.BaseModel.extend({
   organization: DS.attr('string'),
   name: DS.attr('string'),
   group: DS.attr('string'),
-  valueType: DS.attr('string')
-  //projectId: DS.attr('number')
+  valueType: DS.attr('string'),
+  projectId: DS.attr('number')
 });
+
+FLOW.Project = FLOW.BaseModel.extend({
+	  name: DS.attr('string'),
+	  description: DS.attr('string')
+	});
 
 FLOW.Message = FLOW.BaseModel.extend({
   objectId: DS.attr('number'),

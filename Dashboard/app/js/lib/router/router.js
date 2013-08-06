@@ -81,6 +81,7 @@ FLOW.Router = Ember.Router.extend({
             name: 'navSurveysMain'
           });
           FLOW.surveyGroupControl.populate();
+          FLOW.projectControl.populate();
         }
       }),
 

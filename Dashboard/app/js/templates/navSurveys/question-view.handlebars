@@ -14,7 +14,7 @@
     <div class="questionOption floats-in">
       <h1 class="answerNbr">{{t _monitoring_settings}}: </h1>
       <label class="propNamer"><span>{{t _select_existing_property_name}}:</span> {{view Ember.Select
-        contentBinding="FLOW.attributeControl.content"
+        contentBinding="FLOW.attributeControl.projectContent"
         optionLabelPath="content.name"
         optionValuePath="content.keyId"
         selectionBinding="view.attribute"

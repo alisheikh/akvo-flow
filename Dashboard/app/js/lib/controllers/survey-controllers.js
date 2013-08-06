@@ -422,3 +422,23 @@ FLOW.notificationControl = Ember.ArrayController.create({
   }.observes('FLOW.selectedControl.selectedSurvey')
 
 });
+
+FLOW.projectControl = Ember.ArrayController.create({
+	  sortProperties: null,
+	  sortAscending: true,
+	  content: null,
+
+	 setFilteredContent: function() {
+	    this.set('content', FLOW.store.filter(FLOW.Project, function(item) {
+	      return true;
+	    }));
+	  },
+
+	  // load all metrics
+	  populate: function() {
+	    FLOW.store.find(FLOW.Project);
+	    this.setFilteredContent();
+	    this.set('sortProperties', ['name']);
+	    this.set('sortAscending', true);
+	  },
+	});

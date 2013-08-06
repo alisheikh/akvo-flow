@@ -9,6 +9,21 @@
     <label for="newSurveyDesc">{{t _description}}:
       {{view Ember.TextArea valueBinding="view.surveyDescription" placeholder="Type in a description of your survey" size=30 rows="3" }} </label>
    <!--  <label class="labelcheckbox"> {{view Ember.Checkbox checkedBinding="view.requireApproval"}}{{t _require_approval}} </label> -->
+
+	 <div class="questionOption floats-in">
+      <label class="propNamer"><span>{{t _select_existing_project}}:</span> {{view Ember.Select
+        contentBinding="FLOW.projectControl.content"
+        optionLabelPath="content.name"
+        optionValuePath="content.keyId"
+        selectionBinding="view.project"
+        prompt=""
+        promptBinding="Ember.STRINGS._select_project"}}
+      </label>
+      <label class="propNamel">{{t _create_new_project}}: {{view Ember.TextField valueBinding="view.projectName" size=10 }}</label>
+      {{#if view.projectAlreadyExists}} <font color="red">Project already exists, please choose a unique name</font>{{/if}}
+
+    </div>
+
 	  <dl class="floats-in">
               <dt>{{t _version_number}}:</dt>
               <dd><span id="versionNbr">{{FLOW.selectedControl.selectedSurvey.version}}</span>{{tooltip _version_numbers_helps}}</dd>

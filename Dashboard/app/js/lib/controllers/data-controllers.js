@@ -13,6 +13,7 @@ FLOW.attributeControl = Ember.ArrayController.create({
   sortProperties: null,
   sortAscending: true,
   content: null,
+  projectContent: null,
 
  setFilteredContent: function() {
     this.set('content', FLOW.store.filter(FLOW.Metric, function(item) {
@@ -20,7 +21,17 @@ FLOW.attributeControl = Ember.ArrayController.create({
     }));
   },
 
-  // load all Survey Groups
+  setProjectMetrics: function () {
+	 var pId;
+	 if (!Ember.none(FLOW.selectedControl.get('selectedSurvey'))){
+		 pId = FLOW.selectedControl.selectedSurvey.get('projectId');
+		 this.set('projectContent', FLOW.store.filter(FLOW.Metric, function(item) {
+		      return item.get('projectId') == pId;
+		 }));
+	 }
+  }.observes('FLOW.selectedControl.selectedSurvey'),
+
+  // load all metrics
   populate: function() {
     FLOW.store.find(FLOW.Metric);
     this.setFilteredContent();
