@@ -24,6 +24,7 @@
 <bean id="messageDao" class="com.gallatinsystems.messaging.dao.MessageDao"/>
 <bean id="surveyInstanceSummaryDao" class="org.waterforpeople.mapping.analytics.dao.SurveyInstanceSummaryDao"/>
 <bean id="notificationSubscriptionDao" class="com.gallatinsystems.notification.dao.NotificationSubscriptionDao"/>
+<bean id="projectDao" class="com.gallatinsystems.survey.dao.ProjectDao"/>
 
 
 	<context:annotation-config/>
