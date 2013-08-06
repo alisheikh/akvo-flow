@@ -31,6 +31,7 @@ public class SurveyDto extends BaseDto implements NamedObject {
 	private String description;
 	private String status;
 	private String sector;
+	private List<Long> projects = null;
 	private List<QuestionGroupDto> questionGroupList;
 	private String path;
 	private Long surveyGroupId = null;
@@ -42,6 +43,7 @@ public class SurveyDto extends BaseDto implements NamedObject {
 	private Date createdDateTime;
 	private Date lastUpdateDateTime;
 	private Long sourceId = null;
+	private String newProjectName;
 
 	public String getPath() {
 		return path;
@@ -194,6 +196,22 @@ public class SurveyDto extends BaseDto implements NamedObject {
 
 	public void setProjectId(Long projectId) {
 		this.projectId = projectId;
+	}
+
+	public String getNewProjectName() {
+		return newProjectName;
+	}
+
+	public void setNewProjectName(String newProjectName) {
+		this.newProjectName = newProjectName;
+	}
+
+	public List<Long> getProjects() {
+		return projects;
+	}
+
+	public void setProjects(List<Long> projects) {
+		this.projects = projects;
 	}
 
 }

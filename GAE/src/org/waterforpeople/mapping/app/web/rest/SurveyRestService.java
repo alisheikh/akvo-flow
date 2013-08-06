@@ -32,6 +32,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.waterforpeople.mapping.analytics.dao.SurveyInstanceSummaryDao;
 import org.waterforpeople.mapping.analytics.domain.SurveyInstanceSummary;
+import org.waterforpeople.mapping.app.gwt.client.survey.MetricDto;
+import org.waterforpeople.mapping.app.gwt.client.survey.ProjectDto;
 import org.waterforpeople.mapping.app.gwt.client.survey.SurveyDto;
 import org.waterforpeople.mapping.app.util.DtoMarshaller;
 import org.waterforpeople.mapping.app.web.rest.dto.RestStatusDto;
@@ -40,9 +42,13 @@ import org.waterforpeople.mapping.dao.QuestionAnswerStoreDao;
 
 import com.gallatinsystems.common.Constants;
 import com.gallatinsystems.framework.exceptions.IllegalDeletionException;
+import com.gallatinsystems.metric.dao.MetricDao;
+import com.gallatinsystems.metric.domain.Metric;
+import com.gallatinsystems.survey.dao.ProjectDao;
 import com.gallatinsystems.survey.dao.QuestionDao;
 import com.gallatinsystems.survey.dao.SurveyDAO;
 import com.gallatinsystems.survey.dao.SurveyUtils;
+import com.gallatinsystems.survey.domain.Project;
 import com.gallatinsystems.survey.domain.Survey;
 
 @Controller
@@ -222,14 +228,41 @@ public class SurveyRestService {
 				s = surveyDao.getByKey(keyId);
 				// if we find the survey, update it's properties
 				if (s != null) {
+					// deal with possible double save of new project
+					if (s.getProjectId() != null) {
+						ProjectDao pDao = new ProjectDao();
+						Project p = pDao.getByKey(s.getProjectId());
+						if (p != null && p.getName().equals(surveyDto.getNewProjectName())){
+							// reset newProjectName, as we already have a project with that name.
+							surveyDto.setNewProjectName(null);
+							surveyDto.setProjectId(p.getKey().getId());
+						}
+					}
+
 					// copy the properties, except the createdDateTime property,
 					// because it is set in the Dao.
 					BeanUtils.copyProperties(surveyDto, s, new String[] {
 							"createdDateTime", "status", "sector", "version",
 							"lastUpdateDateTime", "description",
-							"instanceCount" });
+							"instanceCount", "newProjectName" });
 
 					s.setDesc(surveyDto.getDescription());
+
+					List<Long> pList = new ArrayList<Long>();
+					if (surveyDto.getNewProjectName() != null && surveyDto.getNewProjectName().length() > 0){
+						// we need to create a new project
+						ProjectDao pDao = new ProjectDao();
+						Project proj = new Project();
+						proj.setName(surveyDto.getNewProjectName());
+						proj = pDao.save(proj);
+
+						ProjectDto pDto = new ProjectDto();
+						DtoMarshaller.copyToDto(proj, pDto);
+						response.put("projects", pDto);
+
+						pList.add(proj.getKey().getId());
+						s.setProjectId(proj.getKey().getId());
+					}
 
 					// need to work around marshaller's inability to translate
 					// string to
@@ -268,11 +301,24 @@ public class SurveyRestService {
 		}
 
 		Survey s = null;
-
+		List<Long> pList = new ArrayList<Long>();
 		if (surveyDto.getSourceId() == null) {
-			s = newSurvey(surveyDto);
-			// FIXME for the moment, the projectId is identical to the surveyId
-			s.setProjectId(s.getKey().getId());
+			s = marshallToDomain(surveyDto);
+			s.setDesc(surveyDto.getDescription());
+			if (surveyDto.getNewProjectName() != null && surveyDto.getNewProjectName().length() > 0){
+				// we need to create a new project
+				ProjectDao pDao = new ProjectDao();
+				Project proj = new Project();
+				proj.setName(surveyDto.getNewProjectName());
+				proj = pDao.save(proj);
+
+				ProjectDto pDto = new ProjectDto();
+				DtoMarshaller.copyToDto(proj, pDto);
+				response.put("projects", pDto);
+
+				pList.add(proj.getKey().getId());
+				s.setProjectId(proj.getKey().getId());
+			}
 			surveyDao.save(s);
 		} else {
 			s = copySurvey(surveyDto);
@@ -285,16 +331,16 @@ public class SurveyRestService {
 		final RestStatusDto statusDto = new RestStatusDto();
 		final SurveyDto dto = new SurveyDto();
 		DtoMarshaller.copyToDto(s, dto);
+		dto.setDescription(s.getDesc());
 		statusDto.setStatus("ok");
+
+		if (pList != null && pList.size() > 0){
+			dto.setProjects(pList);
+		}
 
 		response.put("meta", statusDto);
 		response.put("survey", dto);
 		return response;
-	}
-
-	private Survey newSurvey(SurveyDto dto) {
-		final Survey result = surveyDao.save(marshallToDomain(dto));
-		return result;
 	}
 
 	private Survey copySurvey(SurveyDto dto) {
@@ -314,7 +360,7 @@ public class SurveyRestService {
 		// it is set in the Dao.
 		BeanUtils.copyProperties(dto, s, new String[] { "createdDateTime",
 				"status", "sector", "version", "lastUpdateDateTime",
-				"displayName", "questionGroupList", "instanceCount" });
+				"displayName", "questionGroupList", "instanceCount", "newProjectName" });
 
 		if (dto.getStatus() != null) {
 			s.setStatus(Survey.Status.valueOf(dto.getStatus()));

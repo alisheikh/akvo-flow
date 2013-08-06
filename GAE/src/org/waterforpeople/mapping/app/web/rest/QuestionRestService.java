@@ -45,7 +45,9 @@ import com.gallatinsystems.metric.domain.Metric;
 import com.gallatinsystems.metric.domain.SurveyMetricMapping;
 import com.gallatinsystems.survey.dao.QuestionDao;
 import com.gallatinsystems.survey.dao.QuestionOptionDao;
+import com.gallatinsystems.survey.dao.SurveyDAO;
 import com.gallatinsystems.survey.domain.Question;
+import com.gallatinsystems.survey.domain.Survey;
 
 @Controller
 @RequestMapping("/questions")
@@ -280,8 +282,11 @@ public class QuestionRestService {
 						MetricDao mDao = new MetricDao();
 						Metric metr = new Metric();
 						metr.setName(questionDto.getNewMetricName());
-						// FIXME for now, the project Id is the same as the surveyId
-						metr.setProjectId(questionDto.getSurveyId());
+						SurveyDAO sDao = new SurveyDAO();
+						Survey s = sDao.getById(questionDto.getSurveyId());
+						if (s != null) {
+							metr.setProjectId(s.getProjectId());
+						}
 						metr = mDao.save(metr);
 
 						MetricDto mDto = new MetricDto();
