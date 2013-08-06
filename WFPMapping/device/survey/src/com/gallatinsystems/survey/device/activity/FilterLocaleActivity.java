@@ -21,13 +21,11 @@ import java.util.List;
 
 import com.gallatinsystems.survey.device.R;
 import com.gallatinsystems.survey.device.dao.SurveyDbAdapter;
-import com.gallatinsystems.survey.device.domain.PointOfInterest;
 import com.gallatinsystems.survey.device.domain.SurveyedLocale;
 import com.gallatinsystems.survey.device.util.ConstantUtil;
 
 import android.app.ListActivity;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.location.Criteria;
 import android.location.Location;
@@ -36,16 +34,11 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
-import android.view.Menu;
 import android.view.View;
 import android.view.Window;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
 
 /**
  * Activity to create a list of filtered surveyed locales
@@ -145,7 +138,8 @@ public class FilterLocaleActivity extends ListActivity implements LocationListen
 			@Override
 			public void afterTextChanged(Editable s) {
 				if (s.length() > 2){
-					slCursor = databaseAdapter.listFilteredSurveyedLocales(projectId, lat, lon, s.toString(), nearbyRadius);
+					String searchString = s.toString().toLowerCase().replace("o","0").replace("i","1").replace("l","1");
+					slCursor = databaseAdapter.listFilteredSurveyedLocales(projectId, lat, lon, searchString, nearbyRadius);
 				} else {
 					slCursor = databaseAdapter.listFilteredSurveyedLocales(projectId, lat, lon, null, nearbyRadius);
 				}

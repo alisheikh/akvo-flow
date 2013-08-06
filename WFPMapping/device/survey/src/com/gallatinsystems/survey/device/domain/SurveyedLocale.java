@@ -29,8 +29,8 @@ public class SurveyedLocale implements Serializable {
 	private String projectId;
 	private List<String> metricNames;
 	private List<String> metricValues;
-	private String localeUUID;
 	private String lastSubmittedDate;
+	private String localeUniqueId;
 	private int status;
 	private Double distance;
 
@@ -66,12 +66,12 @@ public class SurveyedLocale implements Serializable {
 		this.projectId = projectId;
 	}
 
-	public String getLocaleUUID() {
-		return localeUUID;
+	public String getLocaleUniqueId() {
+		return localeUniqueId;
 	}
 
-	public void setLocaleUUID(String localeUUID) {
-		this.localeUUID = localeUUID;
+	public void setLocaleUniqueId(String localeUniqueId) {
+		this.localeUniqueId = localeUniqueId;
 	}
 
 	public String getLastSubmittedDate() {
@@ -93,10 +93,8 @@ public class SurveyedLocale implements Serializable {
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		// this should really be z-base-32 encoding
-		if (localeUUID != null) {
-			String lastSixOctets = localeUUID.substring(localeUUID.lastIndexOf('-') + 1);
-			Long id = Long.parseLong(lastSixOctets,16);
-			builder.append("Id: ").append(Long.toString(id,36));
+		if (localeUniqueId != null) {
+			builder.append("Id: ").append(localeUniqueId);
 		}	
 		if (distance!=null){
 			// default: no decimal point, km as unit

@@ -205,8 +205,8 @@ public class RecordDataService extends IntentService {
 				for (int i = 0; i < recordItemArrLen; i++) {
 					Double lat;
 					Double lon;
-					String uuid = recordItemArr.getJSONObject(i).getString("id").toString();
-					Log.v(TAG,"processing " + uuid);
+					String uniqueId = recordItemArr.getJSONObject(i).getString("id").toString();
+					Log.v(TAG,"processing " + uniqueId);
 					String lastSDate = recordItemArr.getJSONObject(i).getString("lastSDate").toString();
 					try {
 						lat = Double.parseDouble(recordItemArr.getJSONObject(i).getString("lat").toString());
@@ -218,8 +218,8 @@ public class RecordDataService extends IntentService {
 
 					JSONArray questionIdArray = new JSONArray(recordItemArr.getJSONObject(i).getString("questionIds"));
 					JSONArray answerValArray = new JSONArray(recordItemArr.getJSONObject(i).getString("answerValues"));
-					Long slId = databaseAdaptor.createOrUpdateSurveyedLocale(uuid, projectId, lastSDate, lat, lon);
-					databaseAdaptor.createOrUpdateSurveyalValues(slId, questionIdArray, answerValArray);
+					Long slId = databaseAdaptor.createOrUpdateSurveyedLocale(uniqueId, projectId, lastSDateUnix, lat, lon);
+					databaseAdaptor.createOrUpdateSurveyalValues(slId, uniqueId, questionIdArray, answerValArray);
 				}
 			}
 		} catch (UnsupportedEncodingException e) {

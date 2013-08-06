@@ -61,7 +61,7 @@ public class SurveyedLocaleOverlay extends GeoOverlay {
 			LinearLayout layout = new LinearLayout(ctx);
 			layout.setOrientation(LinearLayout.VERTICAL);
 			TextView nameText = new TextView(ctx);
-			nameText.setText(slDetails.getLocaleUUID());
+			nameText.setText(slDetails.getLocaleUniqueId());
 			layout.addView(nameText);
 			TextView typeText = new TextView(ctx);
 			typeText.setText(slDetails.getMetricValues().get(0));

@@ -310,7 +310,13 @@ public class SurveyalRestServlet extends AbstractRestApiServlet {
 					locale.setLocaleType(survey.getPointType());
 				}
 				// on a new Locale, use the UUID of the instance as the identifier
-				locale.setIdentifier(instance.getUuid());
+				String idString = base32Uuid(instance.getUuid());
+				if (idString.equals("")){
+					// if we can't form the base32 uuid, use uuid itself
+					idString = instance.getUuid();
+				}
+
+				locale.setIdentifier(idString);
 
 				if (locale.getOrganization() == null) {
 					locale.setOrganization(PropertyUtil
@@ -534,6 +540,24 @@ public class SurveyalRestServlet extends AbstractRestApiServlet {
 	@Override
 	protected void writeOkResponse(RestResponse resp) throws Exception {
 		getResponse().setStatus(200);
+	}
+
+	/* creates a base32 version of a UUID. in the output, it replaces the following letters:
+	 * l, o, i are replace by w, x, y, to avoid confusion with 1 and 0
+	 * we don't use the z as it can easily be confused with 2, especially in handwriting.
+	 * If we can't form the base32 version, we return an empty string.
+	 */
+	private String base32Uuid(String UUID){
+		String strippedUUID = (UUID.substring(0,13) + UUID.substring(24,27)).replace("-", "");
+		String result = null;
+		try {
+			Long id = Long.parseLong(strippedUUID,16);
+			result = Long.toString(id,32).replace("l","w").replace("o","x").replace("i","y");
+		} catch (NumberFormatException e){
+			// if we can't create the base32 UUID string, return empty string.
+			return "";
+		}
+		return result;
 	}
 
 }

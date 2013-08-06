@@ -16,7 +16,6 @@
 
 package com.gallatinsystems.survey.device.activity;
 
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.text.DecimalFormat;
@@ -24,7 +23,6 @@ import java.text.DecimalFormat;
 import com.gallatinsystems.survey.device.R;
 import com.gallatinsystems.survey.device.dao.SurveyDbAdapter;
 import com.gallatinsystems.survey.device.domain.QuestionResponse;
-import com.gallatinsystems.survey.device.domain.Survey;
 import com.gallatinsystems.survey.device.domain.SurveyedLocale;
 import com.gallatinsystems.survey.device.domain.SurveyedLocaleValue;
 import com.gallatinsystems.survey.device.util.ConstantUtil;
@@ -144,7 +142,7 @@ public class NearbyLocaleDetailActivity extends Activity implements
 		
 		// add answers to the appropriate values
 		List<SurveyedLocaleValue> slvList = databaseAdapter.listSurveyedLocaleValuesByLocaleId(sl.getId());
-		QuestionResponse resp = new QuestionResponse(sl.getLocaleUUID(),"IDENT", "0");
+		QuestionResponse resp = new QuestionResponse(sl.getLocaleUniqueId(),"IDENT", "0");
 		resp.setRespondentId(respId);
 		databaseAdapter.createOrUpdateSurveyResponse(resp);
 		
@@ -207,9 +205,7 @@ public class NearbyLocaleDetailActivity extends Activity implements
 	 */
 	private void populateFields() {
 		if (sl != null) {
-			String lastSixOctets = sl.getLocaleUUID().substring(sl.getLocaleUUID().lastIndexOf('-') + 1);
-			Long id = Long.parseLong(lastSixOctets,16);
-			nameField.setText(Long.toString(id,36));
+			nameField.setText(sl.getLocaleUniqueId());
 			Double dist=sl.getDistance();
 			if (dist != null){
 				DecimalFormat df = new DecimalFormat("#");

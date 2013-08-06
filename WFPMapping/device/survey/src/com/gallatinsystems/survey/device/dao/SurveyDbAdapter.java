@@ -101,7 +101,7 @@ public class SurveyDbAdapter {
 
 	// surveyed locale cols. Lat, Lon, status, answer defined above
 	public static final String PROJECT_COL = "project_id";
-	public static final String LOCALE_UUID_COL = "locale_uuid";
+	public static final String LOCALE_UNIQUE_ID_COL = "locale_unique_id";
 	public static final String LAST_SUBMITTED_COL = "last_submitted_date";
 	public static final String SURVEYED_LOCALE_COL = "surveyed_locale_id";
 	public static final String QUESTION_COL = "question_id";
@@ -136,7 +136,7 @@ public class SurveyDbAdapter {
 
 	private static final String TRANSMISSION_HISTORY_TABLE_CREATE = "create table transmission_history (_id integer primary key, survey_respondent_id integer not null, status text, filename text, trans_start_date long, delivered_date long);";
 
-	private static final String SURVEYED_LOCALE_TABLE_CREATE = "create table surveyed_locale (_id integer primary key autoincrement, project_id integer not null, locale_uuid text, last_submitted_date text, lat real, lon real, status integer)";
+	private static final String SURVEYED_LOCALE_TABLE_CREATE = "create table surveyed_locale (_id integer primary key autoincrement, project_id integer not null, locale_unique_id text, last_submitted_date integer, lat real, lon real, status integer)";
 
 	private static final String SURVEYED_LOCALE_VAL_TABLE_CREATE = "create table surveyed_locale_val (_id integer primary key autoincrement, surveyed_locale_id integer not null, question_id text, answer_value text)";
 
@@ -1745,7 +1745,7 @@ public class SurveyDbAdapter {
 	 */
 	public Cursor findSurveyedLocaleByIdentifier(String id) {
 		Cursor cursor = database.query(SURVEYED_LOCALE_TABLE, new String[] { PK_ID_COL,
-				LOCALE_UUID_COL, PROJECT_COL, LAST_SUBMITTED_COL, LAT_COL, LON_COL, STATUS_COL }, LOCALE_UUID_COL + "=?",
+				LOCALE_UNIQUE_ID_COL, PROJECT_COL, LAST_SUBMITTED_COL, LAT_COL, LON_COL, STATUS_COL }, LOCALE_UNIQUE_ID_COL + "=?",
 				new String[] { id }, null, null, null);
 		if (cursor != null) {
 			cursor.moveToFirst();
@@ -1760,7 +1760,7 @@ public class SurveyDbAdapter {
 	 */
 	public Cursor listAllSurveyedLocales() {
 		Cursor cursor = database.query(SURVEYED_LOCALE_TABLE, new String[] {
-				PK_ID_COL, LOCALE_UUID_COL, PROJECT_COL, LAST_SUBMITTED_COL, LAT_COL, LON_COL, STATUS_COL },
+				PK_ID_COL, LOCALE_UNIQUE_ID_COL, PROJECT_COL, LAST_SUBMITTED_COL, LAT_COL, LON_COL, STATUS_COL },
 				null, null, null, null, null, null);
 		if (cursor != null) {
 			cursor.moveToFirst();
@@ -1849,25 +1849,25 @@ public class SurveyDbAdapter {
 	}
 	
 	/**
-	 * creates or updates a Surveyed Locale record based on the data passed in. The id is a UUID string.
+	 * creates or updates a Surveyed Locale record based on the data passed in.
 	 *
 	 * @param id
 	 * @param projectId
-	 * @param lastSDate
+	 * @param lastSDateUnix
 	 * @param lat
 	 * @param lon
 	 * @return
 	 */
-	public long createOrUpdateSurveyedLocale(String uuid, String projectId, String lastSDate, Double lat, Double lon) {
+	public long createOrUpdateSurveyedLocale(String unique_id, String projectId, Long lastSDateUnix, Double lat, Double lon) {
 		ContentValues initialValues = new ContentValues();
-		initialValues.put(LOCALE_UUID_COL, uuid);
+		initialValues.put(LOCALE_UNIQUE_ID_COL, unique_id);
 		initialValues.put(PROJECT_COL, projectId);
-		initialValues.put(LAST_SUBMITTED_COL, lastSDate);
+		initialValues.put(LAST_SUBMITTED_COL, lastSDateUnix);
 		initialValues.put(LAT_COL, lat);
 		initialValues.put(LON_COL, lon);
 		initialValues.put(STATUS_COL, 0);
 
-		Cursor existingSL = findSurveyedLocaleByIdentifier(uuid);
+		Cursor existingSL = findSurveyedLocaleByIdentifier(unique_id);
 		Long slId = null;
 		if (existingSL != null && existingSL.moveToFirst()){
 			slId = (long) existingSL.getInt(existingSL.getColumnIndexOrThrow(PK_ID_COL));
@@ -1892,15 +1892,25 @@ public class SurveyDbAdapter {
 	 * @param answerValArray
 	 * @return
 	 */
-	public void createOrUpdateSurveyalValues(Long slId, JSONArray questionIdArray, JSONArray answerValArray) {
+	public void createOrUpdateSurveyalValues(Long slId, String uniqueId, JSONArray questionIdArray, JSONArray answerValArray) {
 		// first delete all surveyalValues with slId = surveyed_locale_id
 		deleteSurveyalValuesById(Long.valueOf(slId));
 
 		// recreate all surveyalValues.
 		boolean failed = false;
+
+		// put uniqueId in here as well, so we can search for it
+		// we use 0 as question id, as it does not matter.
+		ContentValues initialValues = new ContentValues();
+		initialValues.put(SURVEYED_LOCALE_COL, slId);
+		initialValues.put(QUESTION_COL, 0);
+		initialValues.put(ANSWER_COL, uniqueId);
+		database.insert(SURVEYED_LOCALE_VAL_TABLE, null, initialValues);
+
+		// now put the the real question-answer pairs in
 		for (int i = 0; i < questionIdArray.length(); i++){
 			failed = false;
-			ContentValues initialValues = new ContentValues();
+			initialValues = new ContentValues();
 			initialValues.put(SURVEYED_LOCALE_COL, slId);
 			try {
 				initialValues.put(QUESTION_COL, questionIdArray.getInt(i));
@@ -2023,9 +2033,9 @@ public class SurveyDbAdapter {
 						.getColumnIndexOrThrow(LAT_COL)));
 					sl.setLongitude(slCursor.getDouble(slCursor
 						.getColumnIndexOrThrow(LON_COL)));
-					sl.setLocaleUUID(slCursor.getString(slCursor
-						.getColumnIndexOrThrow(LOCALE_UUID_COL)));
-					sl.setLastSubmittedDate(slCursor.getString(slCursor
+					sl.setLocaleUniqueId(slCursor.getString(slCursor
+						.getColumnIndexOrThrow(LOCALE_UNIQUE_ID_COL)));
+					sl.setLastSubmittedDate(slCursor.getLong(slCursor
 						.getColumnIndexOrThrow(LAST_SUBMITTED_COL)));
 					sl.setStatus(slCursor.getInt(slCursor
 						.getColumnIndexOrThrow(STATUS_COL)));
