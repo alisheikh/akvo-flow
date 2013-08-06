@@ -35,17 +35,20 @@ public class RecordsMetaDto implements Serializable {
 	private String id;
 	private List<Long> questionIds;
 	private List<String> metricNames;
+	private List<Long> metricIds;
 	private List<Boolean> includeInList;
 
 	public RecordsMetaDto() {
 		setQuestionIds(new ArrayList<Long>());
 		setMetricNames(new ArrayList<String>());
+		setMetricIds(new ArrayList<Long>());
 		setIncludeInList(new ArrayList<Boolean>());
 	}
 
-	public void addItem(Long questionId, String metricName, Boolean includeIn) {
+	public void addItem(Long questionId, String metricName, Long metricId, Boolean includeIn) {
 		questionIds.add(questionId);
 		metricNames.add(metricName != null ? metricName : "");
+		metricIds.add(metricId);
 		includeInList.add(includeIn != null ? includeIn.booleanValue() : false);
 	}
 	
@@ -79,5 +82,13 @@ public class RecordsMetaDto implements Serializable {
 
 	public void setIncludeInList(List<Boolean> includeInList) {
 		this.includeInList = includeInList;
+	}
+
+	public List<Long> getMetricIds() {
+		return metricIds;
+	}
+
+	public void setMetricIds(List<Long> metricIds) {
+		this.metricIds = metricIds;
 	}
 }

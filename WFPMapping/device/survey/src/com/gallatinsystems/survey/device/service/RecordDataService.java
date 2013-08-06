@@ -193,9 +193,10 @@ public class RecordDataService extends IntentService {
 				// save meta info
 				JSONObject recordsMeta = jsonObj.getJSONObject("recordsMeta");
 				JSONArray questionIdsArray = new JSONArray(recordsMeta.getString("questionIds"));
+				JSONArray metricIdsArray = new JSONArray(recordsMeta.getString("metricIds"));
 				JSONArray metricNamesArray = new JSONArray(recordsMeta.getString("metricNames"));
 				JSONArray includeInListArray = new JSONArray(recordsMeta.getString("includeInList"));
-				databaseAdaptor.createOrUpdateRecordMeta(projectId, questionIdsArray, metricNamesArray, includeInListArray);
+				databaseAdaptor.createOrUpdateRecordMeta(projectId, questionIdsArray, metricNamesArray, metricIdsArray, includeInListArray);
 
 				// save records
 				JSONArray recordItemArr = jsonObj.getJSONArray("recordData");

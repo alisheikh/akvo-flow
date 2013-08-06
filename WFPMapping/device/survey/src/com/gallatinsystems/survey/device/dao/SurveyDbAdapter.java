@@ -106,6 +106,7 @@ public class SurveyDbAdapter {
 	public static final String SURVEYED_LOCALE_COL = "surveyed_locale_id";
 	public static final String QUESTION_COL = "question_id";
 	public static final String METRIC_NAME_COL = "metric_name";
+	public static final String METRIC_ID_COL = "metric_id";
 	public static final String INCLUDE_IN_LIST_COL = "include_in_list";
 	private static final String TAG = "SurveyDbAdapter";
 	private DatabaseHelper databaseHelper;
@@ -141,7 +142,7 @@ public class SurveyDbAdapter {
 
 	private static final String LOCALE_VAL_INDEX_CREATE = "create index locale_val_index on surveyed_locale_val (answer_value COLLATE NOCASE)";
 
-	private static final String RECORD_META_TABLE_CREATE = "create table record_meta (_id integer primary key autoincrement, project_id text, question_id text, metric_name text, include_in_list boolean)";
+	private static final String RECORD_META_TABLE_CREATE = "create table record_meta (_id integer primary key autoincrement, project_id text, question_id text, metric_name text, metric_id text, include_in_list boolean)";
 
 	private static final String[] DEFAULT_INSERTS = new String[] {
 		
@@ -1921,8 +1922,8 @@ public class SurveyDbAdapter {
 	}
 
 	public void createOrUpdateRecordMeta(String projectId,
-			JSONArray questionIdsArray, JSONArray metricNamesArray,
-			JSONArray includeInListArray) {
+			JSONArray questionIdsArray, JSONArray metricNamesArray, 
+			JSONArray metricIdsArray, JSONArray includeInListArray) {
 
 		// first delete all recordsMeta data by projectId
 		deleteRecordMetaByProjectId(projectId);
@@ -1936,6 +1937,7 @@ public class SurveyDbAdapter {
 			try {
 				initialValues.put(QUESTION_COL, questionIdsArray.getString(i));
 				initialValues.put(METRIC_NAME_COL, metricNamesArray.getString(i));
+				initialValues.put(METRIC_ID_COL, metricIdsArray.getString(i));
 				initialValues.put(INCLUDE_IN_LIST_COL, includeInListArray.getBoolean(i));
 			} catch (JSONException e) {
 				Log.e(TAG, "Problem with parsing questionId - answer pairs" );
@@ -2057,7 +2059,7 @@ public class SurveyDbAdapter {
 
 	public String getMetricNameByQuestionId(String questionId) {
 		Cursor cursor = database.query(RECORD_META_TABLE, new String[] { PK_ID_COL,
-				QUESTION_COL, METRIC_NAME_COL }, QUESTION_COL + "=?",
+				QUESTION_COL, METRIC_NAME_COL, METRIC_ID_COL }, QUESTION_COL + "=?",
 				new String[] { questionId }, null, null, null);
 		if (cursor != null && cursor.moveToFirst()) {
 			try{
