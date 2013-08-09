@@ -42,6 +42,7 @@ import com.gallatinsystems.survey.device.util.ConstantUtil;
  * @author Christopher Fagiani
  * 
  */
+// not used any more
 public class HomeMenuViewAdapter extends BaseAdapter {
 
 	private static final String TAG = "Home Menu View Adapter";
