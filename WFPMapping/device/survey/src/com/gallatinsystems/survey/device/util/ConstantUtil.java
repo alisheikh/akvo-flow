@@ -77,6 +77,11 @@ public class ConstantUtil {
 	public static final String FAILED_STATUS = "Failed";
 
 	/**
+	 * activity results
+	 */
+	public static final int LOCALE_SELECTED = 11;
+
+	/**
 	 * deletion indicators
 	 */
 	public static final String IS_DELETED = "Y";
@@ -199,6 +204,8 @@ public class ConstantUtil {
 	public static final String QUESTION_ID_KEY = "questionId";
 	public static final String QUESTION_TYPE_KEY = "questionType";
 	public static final String SL_KEY = "surveyed-locale";
+
+	public static final String LOCALE_ID_KEY = "ID";
 
 	/**
 	 * settings keys

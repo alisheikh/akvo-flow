@@ -1879,10 +1879,55 @@ public class SurveyDbAdapter {
 	 * @param id
 	 * @return
 	 */
-	public Cursor findSurveyedLocaleByIdentifier(String id) {
+	// TODO should be combined with listSurveyedLocalesByCursor
+	public SurveyedLocale findSurveyedLocale(String id) {
+		SurveyedLocale sl = null;
+		Cursor cursor = database.query(SURVEYED_LOCALE_TABLE, new String[] { PK_ID_COL,
+				LOCALE_UNIQUE_ID_COL, PROJECT_COL, LAST_SUBMITTED_COL, LAT_COL, LON_COL, STATUS_COL }, PK_ID_COL + "=?",
+				new String[] { id }, null, null, null);
+		if (cursor != null && cursor.moveToFirst()){
+			sl = new SurveyedLocale();
+			sl.setId(cursor.getLong(cursor
+					.getColumnIndexOrThrow(PK_ID_COL)));
+				sl.setProjectId(cursor.getString(cursor
+					.getColumnIndexOrThrow(PROJECT_COL)));
+				sl.setLatitude(cursor.getDouble(cursor
+					.getColumnIndexOrThrow(LAT_COL)));
+				sl.setLongitude(cursor.getDouble(cursor
+					.getColumnIndexOrThrow(LON_COL)));
+				sl.setLocaleUniqueId(cursor.getString(cursor
+					.getColumnIndexOrThrow(LOCALE_UNIQUE_ID_COL)));
+				sl.setLastSubmittedDate(cursor.getLong(cursor
+					.getColumnIndexOrThrow(LAST_SUBMITTED_COL)));
+				sl.setStatus(cursor.getInt(cursor
+					.getColumnIndexOrThrow(STATUS_COL)));
+
+				// add metric fields for display in lists
+				List<String> metricNames = new ArrayList<String>();
+				List<String> metricValues = new ArrayList<String>();
+				List<SurveyedLocaleValue> slvList = listSurveyedLocaleValuesByLocaleId(sl.getId() + "");
+				for (SurveyedLocaleValue slv : slvList){
+					if (getIncludeInListByQuestionId(slv.getQuestionId())){
+						metricNames.add(getMetricNameByQuestionId(slv.getQuestionId()));
+						metricValues.add(slv.getAnswerValue());
+					}
+				}
+				sl.setMetricNames(metricNames);
+				sl.setMetricValues(metricValues);
+		}
+		return sl;
+	}
+
+	/**
+	 * retrieves a surveyedLocale by uuid
+	 *
+	 * @param id
+	 * @return
+	 */
+	public Cursor findSurveyedLocaleByIdentifier(String uuid) {
 		Cursor cursor = database.query(SURVEYED_LOCALE_TABLE, new String[] { PK_ID_COL,
 				LOCALE_UNIQUE_ID_COL, PROJECT_COL, LAST_SUBMITTED_COL, LAT_COL, LON_COL, STATUS_COL }, LOCALE_UNIQUE_ID_COL + "=?",
-				new String[] { id }, null, null, null);
+				new String[] { uuid }, null, null, null);
 		if (cursor != null) {
 			cursor.moveToFirst();
 		}
@@ -1925,10 +1970,10 @@ public class SurveyDbAdapter {
 	 * @param slId
 	 * @return
 	 */
-	public List<SurveyedLocaleValue> listSurveyedLocaleValuesByLocaleId(Long slId) {
+	public List<SurveyedLocaleValue> listSurveyedLocaleValuesByLocaleId(String slId) {
 		Cursor cursor = database.query(SURVEYED_LOCALE_VAL_TABLE, new String[] {
 				PK_ID_COL, QUESTION_COL, ANSWER_COL, SURVEYED_LOCALE_COL}, SURVEYED_LOCALE_COL + "=?",
-				new String[] {slId.toString()}, null, null, null);
+				new String[] {slId}, null, null, null);
 
 		List<SurveyedLocaleValue> slvList = new ArrayList<SurveyedLocaleValue>();
 		if (cursor != null && cursor.moveToFirst()){
@@ -2039,7 +2084,7 @@ public class SurveyDbAdapter {
 		// we use 0 as question id, as it does not matter.
 		ContentValues initialValues = new ContentValues();
 		initialValues.put(SURVEYED_LOCALE_COL, slId);
-		initialValues.put(QUESTION_COL, 0);
+		initialValues.put(QUESTION_COL,ConstantUtil.LOCALE_ID_KEY);
 		initialValues.put(ANSWER_COL, uniqueId);
 		database.insert(SURVEYED_LOCALE_VAL_TABLE, null, initialValues);
 
@@ -2185,7 +2230,7 @@ public class SurveyDbAdapter {
 					// add metric fields for display in lists
 					List<String> metricNames = new ArrayList<String>();
 					List<String> metricValues = new ArrayList<String>();
-					List<SurveyedLocaleValue> slvList = listSurveyedLocaleValuesByLocaleId(sl.getId());
+					List<SurveyedLocaleValue> slvList = listSurveyedLocaleValuesByLocaleId(sl.getId() + "");
 					for (SurveyedLocaleValue slv : slvList){
 						if (getIncludeInListByQuestionId(slv.getQuestionId())){
 							metricNames.add(getMetricNameByQuestionId(slv.getQuestionId()));

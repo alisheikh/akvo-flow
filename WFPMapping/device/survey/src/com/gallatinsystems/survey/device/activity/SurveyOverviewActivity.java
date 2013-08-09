@@ -16,12 +16,21 @@
 
 package com.gallatinsystems.survey.device.activity;
 
+import java.util.Date;
+import java.util.List;
+
 import com.gallatinsystems.survey.device.R;
 import com.gallatinsystems.survey.device.dao.SurveyDbAdapter;
+import com.gallatinsystems.survey.device.domain.Project;
+import com.gallatinsystems.survey.device.domain.QuestionResponse;
 import com.gallatinsystems.survey.device.domain.Survey;
+import com.gallatinsystems.survey.device.domain.SurveyedLocale;
+import com.gallatinsystems.survey.device.domain.SurveyedLocaleValue;
 import com.gallatinsystems.survey.device.service.BootstrapService;
 import com.gallatinsystems.survey.device.util.ConstantUtil;
 import com.gallatinsystems.survey.device.util.ViewUtil;
+import com.gallatinsystems.survey.device.view.adapter.HomeMenuViewAdapter;
+import com.gallatinsystems.survey.device.view.adapter.SurveyOverviewAdapter;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -34,14 +43,17 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
+import android.widget.GridView;
 import android.widget.TextView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Toast;
 
 /**
  * Activity to select survey-specific actions
  * 
  * @author Mark Tiele Westra
  */
-public class SurveyOverviewActivity extends Activity {
+public class SurveyOverviewActivity extends Activity implements OnItemClickListener{
 
 	public static final int SURVEY_ACTIVITY = 1;
 	public static final int SELECT_LOCALE_ACTIVITY = 2;
@@ -50,12 +62,17 @@ public class SurveyOverviewActivity extends Activity {
 
 	private TextView surveyField;
 	private TextView currentUserField;
+	private TextView existingRecordField;
+	private TextView projectField;
 	private TextView recordsCollectedField;
 	private TextView readyForUploadField;
 	private TextView savedSurveysField;
 	private SurveyDbAdapter databaseAdapter;
+	private SurveyOverviewAdapter menuViewAdapter;
 	private String userId;
 	private String surveyId;
+	private String projectId;
+	private String selectedLocale;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -63,15 +80,22 @@ public class SurveyOverviewActivity extends Activity {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.surveyoverview);
 
-		surveyField = (TextView) findViewById(R.id.surveyField);
+		//surveyField = (TextView) findViewById(R.id.surveyField);
 		currentUserField = (TextView) findViewById(R.id.currentUserField);
-		recordsCollectedField = (TextView) findViewById(R.id.recordsCollectedField);
-		readyForUploadField = (TextView) findViewById(R.id.readyForUploadField);
-		savedSurveysField = (TextView) findViewById(R.id.savedSurveysField);
-		// fixme: how many need resending because of failed media upload?
+		projectField = (TextView) findViewById(R.id.projectField);
+		existingRecordField = (TextView) findViewById(R.id.existingRecordField);
+
+//		recordsCollectedField = (TextView) findViewById(R.id.recordsCollectedField);
+//		readyForUploadField = (TextView) findViewById(R.id.readyForUploadField);
+//		savedSurveysField = (TextView) findViewById(R.id.savedSurveysField);
 
 		databaseAdapter = new SurveyDbAdapter(this);
 		databaseAdapter.open();
+
+		menuViewAdapter = new SurveyOverviewAdapter(this);
+		GridView grid = (GridView) findViewById(R.id.gridview);
+		grid.setAdapter(menuViewAdapter);
+		grid.setOnItemClickListener(this);
 
 		Bundle extras = getIntent().getExtras();
 		userId = extras != null ? extras.getString(ConstantUtil.USER_ID_KEY)
@@ -81,13 +105,15 @@ public class SurveyOverviewActivity extends Activity {
 					.getString(ConstantUtil.USER_ID_KEY) : null;
 		}
 
-		surveyId = extras != null ? extras
-				.getString(ConstantUtil.SURVEY_ID_KEY) : null;
-		if (surveyId == null) {
-			surveyId = savedInstanceState != null ? savedInstanceState
-					.getString(ConstantUtil.SURVEY_ID_KEY) : "1";
+		projectId = extras != null ? extras
+				.getString(ConstantUtil.PROJECT_ID_KEY) : null;
+		if (projectId == null) {
+			projectId = savedInstanceState != null ? savedInstanceState
+					.getString(ConstantUtil.PROJECT_ID_KEY) : "1";
 		}
+
 		populateFields();
+		selectedLocale = null;
 	}
 
 	/**
@@ -95,7 +121,11 @@ public class SurveyOverviewActivity extends Activity {
 	 */
 	private void populateFields() {
 
-		Survey surveyFromDb = databaseAdapter.findSurvey(surveyId);
+//		Survey surveyFromDb = databaseAdapter.findSurvey(surveyId);
+		Project projectFromDb = databaseAdapter.findProject(projectId);
+		if (projectFromDb != null) {
+			projectField.setText(projectFromDb.getName());
+		}
 
 		Cursor user = databaseAdapter.findUser(Long.parseLong(userId));
 		startManagingCursor(user);
@@ -104,43 +134,27 @@ public class SurveyOverviewActivity extends Activity {
 				.getColumnIndexOrThrow(SurveyDbAdapter.DISP_NAME_COL)));
 		}
 
-		surveyField.setText(surveyFromDb.getName());
-		savedSurveysField.setText(Integer.toString(databaseAdapter
-				.countSurveyRespondents(ConstantUtil.SAVED_STATUS)));
-		recordsCollectedField.setText(Integer.toString(databaseAdapter
-				.countSurveyRespondents(ConstantUtil.SUBMITTED_STATUS)));
-		readyForUploadField.setText(Integer.toString(databaseAdapter
-				.countUnsentSurveyRespondents(surveyId)));
+		if (selectedLocale != null) {
+			SurveyedLocale localeFromDb = databaseAdapter.findSurveyedLocale(selectedLocale);
+			if (localeFromDb != null){
+				existingRecordField.setText(localeFromDb.toString());
+			}
+		}
+//		surveyField.setText(surveyFromDb.getName());
+//		savedSurveysField.setText(Integer.toString(databaseAdapter
+//				.countSurveyRespondents(ConstantUtil.SAVED_STATUS)));
+//		recordsCollectedField.setText(Integer.toString(databaseAdapter
+//				.countSurveyRespondents(ConstantUtil.SUBMITTED_STATUS)));
+//		readyForUploadField.setText(Integer.toString(databaseAdapter
+//				.countUnsentSurveyRespondents(surveyId)));
 	}
 
-	public void startNewRecord(View view) {
-		Survey survey = databaseAdapter.findSurvey(surveyId);
 
-		if (survey != null) {
-			Intent i = new Intent(view.getContext(), SurveyViewActivity.class);
-			i.putExtra(ConstantUtil.USER_ID_KEY, userId);
-			i.putExtra(ConstantUtil.SURVEY_ID_KEY, survey.getId());
-			startActivityForResult(i, SURVEY_ACTIVITY);
-		} else {
-			Log.e(TAG, "Survey for selection is null");
-		}
-	}
-
-	public void updateExistingRecord(View view) {
-		Survey survey = databaseAdapter.findSurvey(surveyId);
-
-		if (survey != null) {
-			Intent i = new Intent(view.getContext(), FilterLocaleActivity.class);
-			i.putExtra(ConstantUtil.USER_ID_KEY, userId);
-			i.putExtra(ConstantUtil.SURVEY_ID_KEY, survey.getId());
-
-			// FIXME for now, the project id is the same as the surveyId
-			i.putExtra(ConstantUtil.PROJECT_ID_KEY, survey.getId());
-			startActivityForResult(i, SELECT_LOCALE_ACTIVITY);
-
-		} else {
-			Log.e(TAG, "Survey for selection is null");
-		}
+	public void findExistingRecord(View view) {
+		Intent i = new Intent(view.getContext(), FilterLocaleActivity.class);
+		i.putExtra(ConstantUtil.USER_ID_KEY, userId);
+		i.putExtra(ConstantUtil.PROJECT_ID_KEY, projectId);
+		startActivityForResult(i, SELECT_LOCALE_ACTIVITY);
 	}
 
 
@@ -152,25 +166,36 @@ public class SurveyOverviewActivity extends Activity {
 	}
 
 	public void downloadData(View view) {
-		Survey survey = databaseAdapter.findSurvey(surveyId);
-		if (survey != null) {
-			 Intent i = new Intent(view.getContext(), DownloadRecordsActivity.class);
-			 i.putExtra(ConstantUtil.USER_ID_KEY, userId);
-			 i.putExtra(ConstantUtil.SURVEY_ID_KEY, survey.getId());
-			 startActivityForResult(i, DOWNLOAD_RECORDS_ACTIVITY);
-
-		} else {
-			Log.e(TAG, "Survey for selection is null");
-		}
+		 Intent i = new Intent(view.getContext(), DownloadRecordsActivity.class);
+		 i.putExtra(ConstantUtil.USER_ID_KEY, userId);
+		 i.putExtra(ConstantUtil.PROJECT_ID_KEY, projectId);
+		 startActivityForResult(i, DOWNLOAD_RECORDS_ACTIVITY);
 	}
 
 	// handle completed survey
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == SURVEY_ACTIVITY || requestCode == SELECT_LOCALE_ACTIVITY) {
+		if (requestCode == SURVEY_ACTIVITY) {
 			// Make sure the request was successful
 			if (resultCode == RESULT_OK) {
 				ViewUtil.showConfirmDialog(R.string.submitcompletetitle,
 						R.string.submitcompletetext, this);
+				// refresh record update time
+				if (selectedLocale != null){
+					SurveyedLocale localeFromDb = databaseAdapter.findSurveyedLocale(selectedLocale);
+					Date now =new Date();
+					localeFromDb.setLastSubmittedDate(now.getTime());
+					existingRecordField.setText(localeFromDb.toString());
+				}
+
+			}
+		} else if (requestCode == SELECT_LOCALE_ACTIVITY) {
+			if (resultCode == ConstantUtil.LOCALE_SELECTED){
+				String slId = data.getStringExtra(ConstantUtil.SL_KEY);
+				selectedLocale = slId;
+				SurveyedLocale localeFromDb = databaseAdapter.findSurveyedLocale(selectedLocale);
+				if (localeFromDb != null){
+					existingRecordField.setText(localeFromDb.toString());
+				}
 			}
 		}
 	}
@@ -178,14 +203,15 @@ public class SurveyOverviewActivity extends Activity {
 	public void onResume() {
 		super.onResume();
 		databaseAdapter.open();
+		menuViewAdapter.loadData(this, projectId);
 
 		// Update the survey counts
-		savedSurveysField.setText(Integer.toString(databaseAdapter
-				.countSurveyRespondents(ConstantUtil.SAVED_STATUS)));
-		recordsCollectedField.setText(Integer.toString(databaseAdapter
-				.countSurveyRespondents(ConstantUtil.SUBMITTED_STATUS)));
-		readyForUploadField.setText(Integer.toString(databaseAdapter
-				.countUnsentSurveyRespondents(surveyId)));
+//		savedSurveysField.setText(Integer.toString(databaseAdapter
+//				.countSurveyRespondents(ConstantUtil.SAVED_STATUS)));
+//		recordsCollectedField.setText(Integer.toString(databaseAdapter
+//				.countSurveyRespondents(ConstantUtil.SUBMITTED_STATUS)));
+//		readyForUploadField.setText(Integer.toString(databaseAdapter
+//				.countUnsentSurveyRespondents(surveyId)));
 	}
 
 	protected void onPause() {
@@ -204,4 +230,43 @@ public class SurveyOverviewActivity extends Activity {
 		super.onSaveInstanceState(outState);
 	}
 
+	@Override
+	public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+		Survey survey = menuViewAdapter.getSelectedSurvey(position);
+		if (survey != null ) {
+			if (selectedLocale != null){
+				SurveyedLocale localeFromDb = databaseAdapter.findSurveyedLocale(selectedLocale);
+
+				// create new survey respondent
+				Long respId = databaseAdapter.createSurveyRespondent(surveyId, userId);
+
+				// add answers to the appropriate values
+				List<SurveyedLocaleValue> slvList = databaseAdapter.listSurveyedLocaleValuesByLocaleId(selectedLocale);
+				QuestionResponse resp = new QuestionResponse(localeFromDb.getLocaleUniqueId(),"IDENT", "0");
+				resp.setRespondentId(respId);
+				databaseAdapter.createOrUpdateSurveyResponse(resp);
+
+				for (SurveyedLocaleValue slv : slvList){
+					resp = new QuestionResponse(slv.getAnswerValue(),ConstantUtil.VALUE_RESPONSE_TYPE, slv.getQuestionId());
+					resp.setRespondentId(respId);
+					databaseAdapter.createOrUpdateSurveyResponse(resp);
+				}
+
+				// initiate the survey view activity
+				Intent i = new Intent(v.getContext(), SurveyViewActivity.class);
+				i.putExtra(ConstantUtil.USER_ID_KEY, userId);
+				i.putExtra(ConstantUtil.SURVEY_ID_KEY, survey.getId());
+				i.putExtra(ConstantUtil.RESPONDENT_ID_KEY, respId);
+				startActivityForResult(i,SURVEY_ACTIVITY);
+			} else {
+				// start a new one, or complete an existing one that we left
+				Intent i = new Intent(v.getContext(), SurveyViewActivity.class);
+				i.putExtra(ConstantUtil.USER_ID_KEY, userId);
+				i.putExtra(ConstantUtil.SURVEY_ID_KEY, survey.getId());
+				startActivityForResult(i, SURVEY_ACTIVITY);
+			}
+		} else {
+			Log.e(TAG, "Survey for selection is null");
+		}
+	}
 }
