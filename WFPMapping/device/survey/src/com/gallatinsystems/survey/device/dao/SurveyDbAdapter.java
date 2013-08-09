@@ -2222,7 +2222,8 @@ public class SurveyDbAdapter {
 					sl.setStatus(slCursor.getInt(slCursor
 						.getColumnIndexOrThrow(STATUS_COL)));
 
-					if (lat != null && lon != null && sl.getLatitude() != null && sl.getLongitude() != null){
+					if (lat != null && lon != null && sl.getLatitude() != null && sl.getLongitude() != null
+							&& !GeoUtil.isZero(sl.getLatitude()) && !GeoUtil.isZero(sl.getLongitude())){
 						float[] distance = new float[1];
 						Location.distanceBetween(lat,lon, sl.getLatitude(), sl.getLongitude(), distance);
 						sl.setDistance(Double.valueOf(distance[0]));

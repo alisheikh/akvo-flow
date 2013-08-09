@@ -28,6 +28,8 @@ import com.google.android.maps.GeoPoint;
  * 
  */
 public class GeoUtil {
+	private static final Double EPSILON = 0.0000001;
+
 	/**
 	 * converts lat/lon values into a GeoPoint
 	 * 
@@ -88,6 +90,10 @@ public class GeoUtil {
 				- point2.getLatitudeE6(), 2d)
 				+ Math.pow(point1.getLongitudeE6() - point2.getLongitudeE6(),
 						2d));
+	}
+
+	public static Boolean isZero(Double number){
+		return (Math.abs(number)) < EPSILON;
 	}
 
 	/**
