@@ -114,6 +114,8 @@ public class SurveyedLocale implements Serializable {
 			} 		
 			double dist = distance * factor;
 			builder.append("    ").append(df.format(dist)).append(unit).append("\n");
+		} else {
+			builder.append("\n");
 		}
 
 		if (getLastSubmittedDate() != null){
