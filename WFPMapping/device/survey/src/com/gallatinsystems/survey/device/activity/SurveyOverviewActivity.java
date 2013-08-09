@@ -101,7 +101,7 @@ public class SurveyOverviewActivity extends Activity {
 		startManagingCursor(user);
 		if (user.getCount() > 0) {
 			currentUserField.setText(user.getString(user
-					.getColumnIndexOrThrow(SurveyDbAdapter.DISP_NAME_COL)));
+				.getColumnIndexOrThrow(SurveyDbAdapter.DISP_NAME_COL)));
 		}
 
 		surveyField.setText(surveyFromDb.getName());
@@ -143,9 +143,6 @@ public class SurveyOverviewActivity extends Activity {
 		}
 	}
 
-	public void uploadData(View view) {
-		// TODO
-	}
 
 	public void showSurveyList(View view) {
 		Survey survey = databaseAdapter.findSurvey(surveyId);

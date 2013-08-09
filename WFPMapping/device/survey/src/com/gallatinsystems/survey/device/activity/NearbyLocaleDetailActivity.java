@@ -206,7 +206,7 @@ public class NearbyLocaleDetailActivity extends Activity implements
 	private void populateFields() {
 		if (sl != null) {
 			nameField.setText(sl.getLocaleUniqueId());
-			Double dist=sl.getDistance();
+			Double dist = sl.getDistance();
 			if (dist != null){
 				DecimalFormat df = new DecimalFormat("#");
 				// default: no decimal point, km as unit

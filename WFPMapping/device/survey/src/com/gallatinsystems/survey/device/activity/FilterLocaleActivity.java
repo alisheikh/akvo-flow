@@ -34,6 +34,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.ArrayAdapter;
@@ -88,12 +89,12 @@ public class FilterLocaleActivity extends ListActivity implements LocationListen
 					.getString(ConstantUtil.USER_ID_KEY) : null;
 		}
 
-		surveyId = extras != null ? extras
-				.getString(ConstantUtil.SURVEY_ID_KEY) : null;
-		if (surveyId == null) {
-			surveyId = savedInstanceState != null ? savedInstanceState
-					.getString(ConstantUtil.SURVEY_ID_KEY) : "1";
-		}
+//		surveyId = extras != null ? extras
+//				.getString(ConstantUtil.SURVEY_ID_KEY) : null;
+//		if (surveyId == null) {
+//			surveyId = savedInstanceState != null ? savedInstanceState
+//					.getString(ConstantUtil.SURVEY_ID_KEY) : "1";
+//		}
 	}
 	
 	public void onResume() {
@@ -128,7 +129,7 @@ public class FilterLocaleActivity extends ListActivity implements LocationListen
 				locMgr.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, this);
 			}
 		}
-		// filter surveyedLocales by location and
+		// filter surveyedLocales by location
 		slCursor = databaseAdapter.listFilteredSurveyedLocales(projectId, lat, lon, null, nearbyRadius);
 		slArray = databaseAdapter.listSurveyedLocalesByCursor(slCursor, skip, 10, lat, lon);
 		updateUi(slArray);
@@ -180,9 +181,8 @@ public class FilterLocaleActivity extends ListActivity implements LocationListen
 
 	protected void onActivityResult(int requestCode, int resultCode,
             Intent data) {
-		if (resultCode == RESULT_OK){
-			Intent intent = this.getIntent();
-			this.setResult(RESULT_OK, intent);
+		if (resultCode == ConstantUtil.LOCALE_SELECTED){
+			this.setResult(ConstantUtil.LOCALE_SELECTED, data);
 			this.finish();
 		}
 	}

@@ -97,11 +97,10 @@ public class SurveyedLocale implements Serializable {
 
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		// this should really be z-base-32 encoding
 		if (localeUniqueId != null) {
 			builder.append("Id: ").append(localeUniqueId);
 		}	
-		if (distance!=null){
+		if (distance != null){
 			// default: no decimal point, km as unit
 			DecimalFormat df = new DecimalFormat("#.#");
 			String unit = "km";
