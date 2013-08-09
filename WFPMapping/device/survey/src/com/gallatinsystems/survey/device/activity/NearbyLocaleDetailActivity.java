@@ -136,28 +136,12 @@ public class NearbyLocaleDetailActivity extends Activity implements
 	}
 
 	
-	public void updateLocale(View view) {
-		// create new survey respondent
-		Long respId = databaseAdapter.createSurveyRespondent(surveyId, userId);
-		
-		// add answers to the appropriate values
-		List<SurveyedLocaleValue> slvList = databaseAdapter.listSurveyedLocaleValuesByLocaleId(sl.getId());
-		QuestionResponse resp = new QuestionResponse(sl.getLocaleUniqueId(),"IDENT", "0");
-		resp.setRespondentId(respId);
-		databaseAdapter.createOrUpdateSurveyResponse(resp);
-		
-		for (SurveyedLocaleValue slv : slvList){
-			resp = new QuestionResponse(slv.getAnswerValue(),ConstantUtil.VALUE_RESPONSE_TYPE, slv.getQuestionId());
-			resp.setRespondentId(respId);
-			databaseAdapter.createOrUpdateSurveyResponse(resp);
-		}
-		
-		// initiate the survey view activity
-		Intent i = new Intent(view.getContext(), SurveyViewActivity.class);
-		i.putExtra(ConstantUtil.USER_ID_KEY, userId);
-		i.putExtra(ConstantUtil.SURVEY_ID_KEY, surveyId);
-		i.putExtra(ConstantUtil.RESPONDENT_ID_KEY, respId);
-		startActivityForResult(i,SURVEY_EDIT_ACTIVITY);
+	public void selectLocale(View view) {
+		// go back to overview with selection.
+		Intent resultIntent = new Intent();
+		resultIntent.putExtra(ConstantUtil.SL_KEY, sl.getId() + "");
+		this.setResult(ConstantUtil.LOCALE_SELECTED, resultIntent);
+		this.finish();
 	}
 	
 	protected void onActivityResult(int requestCode, int resultCode,
@@ -224,25 +208,28 @@ public class NearbyLocaleDetailActivity extends Activity implements
 				distanceField.setText(" " + df.format(dist) + unit);//show whole meters
 			}
 
-			List<SurveyedLocaleValue> slvList = databaseAdapter.listSurveyedLocaleValuesByLocaleId(sl.getId());
+			List<SurveyedLocaleValue> slvList = databaseAdapter.listSurveyedLocaleValuesByLocaleId(sl.getId() + "");
 			if (slvList != null && slvList.size() > 0){
 				LinearLayout l = new LinearLayout(this);
 				l.setOrientation(LinearLayout.VERTICAL);
 				for (SurveyedLocaleValue slv : slvList){
-					LinearLayout subl = new LinearLayout(this);
-					subl.setOrientation(LinearLayout.HORIZONTAL);
+					// skip the id, which we already display
+					if (!slv.getQuestionId().equals(ConstantUtil.LOCALE_ID_KEY)){
+						LinearLayout subl = new LinearLayout(this);
+						subl.setOrientation(LinearLayout.HORIZONTAL);
 
-					// get metric name for this questions
-					String metricName = databaseAdapter.getMetricNameByQuestionId(slv.getQuestionId());
-					TextView labelView = new TextView(this);
-					labelView.setText(metricName + ": ");
-					labelView.setTextSize(20);
-					subl.addView(labelView);
-					TextView valView = new TextView(this);
-					valView.setText(slv.getAnswerValue());
-					valView.setTextSize(20);
-					subl.addView(valView);
-					l.addView(subl);
+						// get metric name for this questions
+						String metricName = databaseAdapter.getMetricNameByQuestionId(slv.getQuestionId());
+						TextView labelView = new TextView(this);
+						labelView.setText(metricName + ": ");
+						labelView.setTextSize(20);
+						subl.addView(labelView);
+						TextView valView = new TextView(this);
+						valView.setText(slv.getAnswerValue());
+						valView.setTextSize(20);
+						subl.addView(valView);
+						l.addView(subl);
+					}
 				}	
 				scrollView.addView(l);
 			}

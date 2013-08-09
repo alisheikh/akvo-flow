@@ -57,11 +57,11 @@
             android:onClick="showLocaleMap"/>
         
          <Button
-            android:id="@+id/updateLocale"
+            android:id="@+id/selectLocale"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/updatethisrecord" 
-            android:onClick="updateLocale"/>
+            android:text="@string/selectthisrecord" 
+            android:onClick="selectLocale"/>
 
     </LinearLayout>
     	

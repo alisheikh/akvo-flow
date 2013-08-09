@@ -88,13 +88,6 @@ public class FilterLocaleActivity extends ListActivity implements LocationListen
 			userId = savedInstanceState != null ? savedInstanceState
 					.getString(ConstantUtil.USER_ID_KEY) : null;
 		}
-
-//		surveyId = extras != null ? extras
-//				.getString(ConstantUtil.SURVEY_ID_KEY) : null;
-//		if (surveyId == null) {
-//			surveyId = savedInstanceState != null ? savedInstanceState
-//					.getString(ConstantUtil.SURVEY_ID_KEY) : "1";
-//		}
 	}
 	
 	public void onResume() {
@@ -182,6 +175,7 @@ public class FilterLocaleActivity extends ListActivity implements LocationListen
 	protected void onActivityResult(int requestCode, int resultCode,
             Intent data) {
 		if (resultCode == ConstantUtil.LOCALE_SELECTED){
+			// simply pass on the received intent data
 			this.setResult(ConstantUtil.LOCALE_SELECTED, data);
 			this.finish();
 		}
