@@ -43,6 +43,7 @@ import android.util.Log;
 import com.gallatinsystems.survey.device.R;
 import com.gallatinsystems.survey.device.dao.SurveyDao;
 import com.gallatinsystems.survey.device.dao.SurveyDbAdapter;
+import com.gallatinsystems.survey.device.domain.Project;
 import com.gallatinsystems.survey.device.domain.Question;
 import com.gallatinsystems.survey.device.domain.QuestionHelp;
 import com.gallatinsystems.survey.device.domain.Survey;
@@ -72,6 +73,7 @@ public class SurveyDownloadService extends Service {
 	@SuppressWarnings("unused")
 	private static final String NO_SURVEY = "No Survey Found";
 	private static final String SURVEY_LIST_SERVICE_PATH = "/surveymanager?action=getAvailableSurveysDevice&devicePhoneNumber=";
+	private static final String PROJECT_LIST_SERVICE_PATH = "/surveymanager?action=getAvailableProjectsDevice&devicePhoneNumber=";
 	private static final String SURVEY_HEADER_SERVICE_PATH = "/surveymanager?action=getSurveyHeader&surveyId=";
 	private static final String DEV_ID_PARAM = "&devId=";
 	private static final String IMEI_PARAM = "&imei=";
@@ -147,6 +149,7 @@ public class SurveyDownloadService extends Service {
 				String deviceId = databaseAdaptor
 						.findPreference(ConstantUtil.DEVICE_IDENT_KEY);
 				ArrayList<Survey> surveys = null;
+				ArrayList<Project> projects = null;
 
 				if (surveyId != null && surveyId.trim().length() > 0) {
 					surveys = getSurveyHeader(serverBase, surveyId, deviceId);
@@ -157,6 +160,7 @@ public class SurveyDownloadService extends Service {
 				} else {
 					if (canDownload(surveyCheckOption)) {
 						surveys = checkForSurveys(serverBase, deviceId);
+						projects = checkForProjects(serverBase, deviceId);
 					}
 				}
 				if (surveys != null && surveys.size() > 0) {
@@ -182,6 +186,12 @@ public class SurveyDownloadService extends Service {
 						if (updateCount > 0) {
 							fireNotification(updateCount);
 						}
+					}
+				}
+				if (projects != null && projects.size() > 0){
+					databaseAdaptor.deleteAllProjects();
+					for (Project p : projects){
+						databaseAdaptor.saveProject(p);
 					}
 				}
 
@@ -291,7 +301,7 @@ public class SurveyDownloadService extends Service {
 	/**
 	 * checks to see if we should pre-cache help media files (based on the
 	 * property in the settings db) and, if we should, downloads the files
-	 * 
+	 *
 	 * @param survey
 	 */
 	private void downloadHelp(Survey survey, int precacheOption) {
@@ -372,7 +382,7 @@ public class SurveyDownloadService extends Service {
 	/**
 	 * uses the thread pool executor to download the remote file passed in via a
 	 * background thread
-	 * 
+	 *
 	 * @param remoteFile
 	 * @param surveyId
 	 */
@@ -400,7 +410,7 @@ public class SurveyDownloadService extends Service {
 
 	/**
 	 * invokes a service call to get the header information for a single survey
-	 * 
+	 *
 	 * @param serverBase
 	 * @param surveyId
 	 * @return
@@ -419,7 +429,7 @@ public class SurveyDownloadService extends Service {
 				while (strTok.hasMoreTokens()) {
 					String currentLine = strTok.nextToken();
 					String[] touple = currentLine.split(",");
-					if (touple.length < 4) {
+					if (touple.length < 5) {
 						Log.e(TAG,
 								"Survey list response is in an unrecognized format");
 					} else {
@@ -429,6 +439,7 @@ public class SurveyDownloadService extends Service {
 						temp.setLanguage(touple[2]);
 						temp.setVersion(Double.parseDouble(touple[3]));
 						temp.setType(ConstantUtil.FILE_SURVEY_LOCATION_TYPE);
+						temp.setProjectId(touple[4]);
 						surveys.add(temp);
 					}
 				}
@@ -463,7 +474,7 @@ public class SurveyDownloadService extends Service {
 				while (strTok.hasMoreTokens()) {
 					String currentLine = strTok.nextToken();
 					String[] touple = currentLine.split(",");
-					if (touple.length < 5) {
+					if (touple.length < 6) {
 						Log.e(TAG,
 								"Survey list response is in an unrecognized format");
 					} else {
@@ -473,6 +484,7 @@ public class SurveyDownloadService extends Service {
 						temp.setLanguage(touple[3]);
 						temp.setVersion(Double.parseDouble(touple[4]));
 						temp.setType(ConstantUtil.FILE_SURVEY_LOCATION_TYPE);
+						temp.setProjectId(touple[5]);
 						surveys.add(temp);
 
 					}
@@ -486,6 +498,47 @@ public class SurveyDownloadService extends Service {
 			PersistentUncaughtExceptionHandler.recordException(e);
 		}
 		return surveys;
+	}
+
+	/**
+	 * invokes a service call to list all projects that have been designated for
+	 * this device (based on phone number).
+	 *
+	 * @return - an arrayList of project objects
+	 */
+	private ArrayList<Project> checkForProjects(String serverBase, String deviceId) {
+		String response = null;
+		ArrayList<Project> projects = new ArrayList<Project>();
+		try {
+			response = HttpUtil.httpGet(serverBase
+					+ PROJECT_LIST_SERVICE_PATH + URLEncoder.encode(StatusUtil.getPhoneNumber(this), "UTF-8")
+					+ IMEI_PARAM + URLEncoder.encode(StatusUtil.getImei(this), "UTF-8")
+					+ (deviceId != null ? DEV_ID_PARAM + URLEncoder.encode(deviceId, "UTF-8") : ""));
+			if (response != null) {
+				StringTokenizer strTok = new StringTokenizer(response, "\n");
+				while (strTok.hasMoreTokens()) {
+					String currentLine = strTok.nextToken();
+					String[] touple = currentLine.split(",");
+					if (touple.length < 2) {
+						Log.e(TAG,
+								"Project list response is in an unrecognized format");
+					} else {
+						Project temp = new Project();
+						temp.setProjectId(touple[0]);
+						temp.setName(touple[1]);
+						projects.add(temp);
+
+					}
+				}
+			}
+		} catch (HttpException e) {
+			Log.e(TAG, "Server returned an unexpected response", e);
+			PersistentUncaughtExceptionHandler.recordException(e);
+		} catch (Exception e) {
+			Log.e(TAG, "Could not download survey", e);
+			PersistentUncaughtExceptionHandler.recordException(e);
+		}
+		return projects;
 	}
 
 	/**

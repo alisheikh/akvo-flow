@@ -36,6 +36,7 @@ public class SurveyManagerRequest extends RestRequest {
 	public static final String GET_AVAIL_DEVICE_SURVEY_ACTION = "getAvailableSurveysDevice";
 	public static final String GET_SURVEY_HEADER_ACTION = "getSurveyHeader";
 	public static final String GET_ZIP_FILE_URL_ACTION = "getZipFileUrls";
+	public static final String GET_AVAIL_DEVICE_PROJECT_ACTION = "getAvailableProjectsDevice";
 
 	private static final String SURVEY_INSTANCE_PARAM = "surveyInstanceId";
 	private static final String SURVEY_ID_PARAM = "surveyId";

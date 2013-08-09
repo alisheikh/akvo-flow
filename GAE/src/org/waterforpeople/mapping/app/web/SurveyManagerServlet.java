@@ -35,6 +35,7 @@ import org.waterforpeople.mapping.dao.SurveyContainerDao;
 import org.waterforpeople.mapping.dao.SurveyInstanceDAO;
 import org.waterforpeople.mapping.domain.SurveyInstance;
 
+import com.gallatinsystems.common.Constants;
 import com.gallatinsystems.device.dao.DeviceDAO;
 import com.gallatinsystems.device.domain.Device;
 import com.gallatinsystems.device.domain.Device.DeviceType;
@@ -44,7 +45,9 @@ import com.gallatinsystems.framework.rest.AbstractRestApiServlet;
 import com.gallatinsystems.framework.rest.RestRequest;
 import com.gallatinsystems.framework.rest.RestResponse;
 import com.gallatinsystems.survey.dao.DeviceSurveyJobQueueDAO;
+import com.gallatinsystems.survey.dao.ProjectDao;
 import com.gallatinsystems.survey.dao.SurveyDAO;
+import com.gallatinsystems.survey.domain.Project;
 import com.gallatinsystems.survey.domain.Survey;
 import com.gallatinsystems.survey.domain.SurveyContainer;
 
@@ -68,6 +71,7 @@ public class SurveyManagerServlet extends AbstractRestApiServlet {
 		SurveyDAO surveyDao = new SurveyDAO();
 		Map<Long, Double> versionMap = new HashMap<Long, Double>();
 		StringBuilder sb = new StringBuilder();
+		Long pId = 0L;
 		for (DeviceSurveyJobQueue dsjq : dsjqDAO.get(devicePhoneNumber, imei)) {
 			Double ver = versionMap.get(dsjq.getSurveyID());
 			if (ver == null) {
@@ -80,7 +84,7 @@ public class SurveyManagerServlet extends AbstractRestApiServlet {
 						versionMap.put(dsjq.getSurveyID(), new Double(1.0));
 						ver = new Double(1.0);
 					}
-
+					pId = s.getProjectId();
 				} else {
 					// for testing so I can mock a version for local survey
 					Random rand = new Random();
@@ -89,10 +93,23 @@ public class SurveyManagerServlet extends AbstractRestApiServlet {
 			}
 			sb.append(devicePhoneNumber + "," + dsjq.getSurveyID() + ","
 					+ dsjq.getName() + "," + dsjq.getLanguage() + "," + ver
-					+ "\n");
+					+ "," + pId.toString() + "\n");
 		}
 		return sb.toString();
 	}
+
+		//Return a list all the projects the device needs
+		//use imei or phone number for lookup
+		private String getProjectsForPhone(String devicePhoneNumber, String imei) {
+			StringBuilder sb = new StringBuilder();
+			// TODO this should be restricted to only return projects for this device
+			ProjectDao pDao = new ProjectDao();
+			for (Project p : pDao.list(Constants.ALL_RESULTS)) {
+				sb.append(p.getKey().getId() + "," + p.getName()
+					+ "\n");
+			}
+			return sb.toString();
+		}
 
 	@Override
 	protected RestRequest convertRequest() throws Exception {
@@ -162,6 +179,12 @@ public class SurveyManagerServlet extends AbstractRestApiServlet {
 					deviceDao.save(dev);
 				}
 			}
+		} else if (SurveyManagerRequest.GET_AVAIL_DEVICE_PROJECT_ACTION
+				.equalsIgnoreCase(req.getAction())) {
+			//Report which projcets the device should have
+			if (mgrReq.getPhoneNumber() != null || mgrReq.getImei() != null) {
+				resp.setMessage(getProjectsForPhone(mgrReq.getPhoneNumber(), mgrReq.getImei()));
+			}
 		} else if (SurveyManagerRequest.GET_SURVEY_HEADER_ACTION
 				.equalsIgnoreCase(req.getAction())) {
 			if (mgrReq.getSurveyId() != null) {
@@ -177,7 +200,9 @@ public class SurveyManagerServlet extends AbstractRestApiServlet {
 									.getDefaultLanguageCode() : "en")
 							.append(",")
 							.append(survey.getVersion() != null ? survey
-									.getVersion() : "1");
+									.getVersion() : "1")
+							.append(",")
+							.append(survey.getProjectId().toString());
 					resp.setMessage(sb.toString());
 				}
 			}

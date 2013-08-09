@@ -38,6 +38,7 @@ import android.util.Log;
 
 import com.gallatinsystems.survey.device.domain.FileTransmission;
 import com.gallatinsystems.survey.device.domain.PointOfInterest;
+import com.gallatinsystems.survey.device.domain.Project;
 import com.gallatinsystems.survey.device.domain.QuestionResponse;
 import com.gallatinsystems.survey.device.domain.Survey;
 import com.gallatinsystems.survey.device.domain.SurveyedLocale;
@@ -101,6 +102,8 @@ public class SurveyDbAdapter {
 
 	// surveyed locale cols. Lat, Lon, status, answer defined above
 	public static final String PROJECT_COL = "project_id";
+	public static final String PROJECT_NAME_COL = "project_name";
+
 	public static final String LOCALE_UNIQUE_ID_COL = "locale_unique_id";
 	public static final String LAST_SUBMITTED_COL = "last_submitted_date";
 	public static final String SURVEYED_LOCALE_COL = "surveyed_locale_id";
@@ -116,7 +119,7 @@ public class SurveyDbAdapter {
 	 * Database creation sql statement
 	 */
 	private static final String SURVEY_TABLE_CREATE = "create table survey (_id integer primary key, "
-			+ "display_name text not null, version real, type text, location text, filename text, language, help_downloaded_flag text, deleted_flag text);";
+			+ "display_name text not null, project_id text, version real, type text, location text, filename text, language, help_downloaded_flag text, deleted_flag text);";
 
 	private static final String SURVEY_RESPONDENT_CREATE = "create table survey_respondent (_id integer primary key autoincrement, "
 			+ "survey_id integer not null, submitted_flag text, submitted_date text, delivered_date text, user_id integer, media_sent_flag text, status text, saved_date long, exported_flag text, uuid text);";
@@ -136,9 +139,11 @@ public class SurveyDbAdapter {
 
 	private static final String TRANSMISSION_HISTORY_TABLE_CREATE = "create table transmission_history (_id integer primary key, survey_respondent_id integer not null, status text, filename text, trans_start_date long, delivered_date long);";
 
-	private static final String SURVEYED_LOCALE_TABLE_CREATE = "create table surveyed_locale (_id integer primary key autoincrement, project_id integer not null, locale_unique_id text, last_submitted_date integer, lat real, lon real, status integer)";
+	private static final String SURVEYED_LOCALE_TABLE_CREATE = "create table surveyed_locale (_id integer primary key autoincrement, project_id text, locale_unique_id text, last_submitted_date integer, lat real, lon real, status integer)";
 
 	private static final String SURVEYED_LOCALE_VAL_TABLE_CREATE = "create table surveyed_locale_val (_id integer primary key autoincrement, surveyed_locale_id integer not null, question_id text, answer_value text)";
+
+	private static final String PROJECT_TABLE_CREATE = "create table project (_id integer primary key autoincrement, project_id text, project_name text)";
 
 	private static final String LOCALE_VAL_INDEX_CREATE = "create index locale_val_index on surveyed_locale_val (answer_value COLLATE NOCASE)";
 
@@ -178,6 +183,7 @@ public class SurveyDbAdapter {
 	private static final String TRANSMISSION_HISTORY_TABLE = "transmission_history";
 	private static final String SURVEYED_LOCALE_TABLE = "surveyed_locale";
 	private static final String SURVEYED_LOCALE_VAL_TABLE = "surveyed_locale_val";
+	private static final String PROJECT_TABLE = "project";
 	private static final String LOCALE_VAL_INDEX = "locale_val_index";
 	private static final String RECORD_META_TABLE = "record_meta";
 	private static final String RESPONSE_JOIN = "survey_respondent LEFT OUTER JOIN survey_response ON (survey_respondent._id = survey_response.survey_respondent_id) LEFT OUTER JOIN user ON (user._id = survey_respondent.user_id)";
@@ -223,6 +229,7 @@ public class SurveyDbAdapter {
 			db.execSQL(SURVEYED_LOCALE_VAL_TABLE_CREATE);
 			db.execSQL(RECORD_META_TABLE_CREATE);
 			db.execSQL(LOCALE_VAL_INDEX_CREATE);
+			db.execSQL(PROJECT_TABLE_CREATE);
 
 			for (int i = 0; i < DEFAULT_INSERTS.length; i++) {
 				db.execSQL(DEFAULT_INSERTS[i]);
@@ -325,10 +332,12 @@ public class SurveyDbAdapter {
 				db.execSQL("DROP TABLE IF EXISTS " + SURVEYED_LOCALE_VAL_TABLE);
 				db.execSQL("DROP TABLE IF EXISTS " + RECORD_META_TABLE);
 				db.execSQL("DROP INDEX IF EXISTS " + LOCALE_VAL_INDEX);
+				db.execSQL("DROP TABLE IF EXISTS " + PROJECT_TABLE);
 				db.execSQL(SURVEYED_LOCALE_TABLE_CREATE);
 				db.execSQL(SURVEYED_LOCALE_VAL_TABLE_CREATE);
 				db.execSQL(RECORD_META_TABLE_CREATE);
 				db.execSQL(LOCALE_VAL_INDEX_CREATE);
+				db.execSQL(PROJECT_TABLE_CREATE);
 			}
 
 			// now handle defaults
@@ -1032,6 +1041,7 @@ public class SurveyDbAdapter {
 		updatedValues.put(LOCATION_COL, survey.getLocation());
 		updatedValues.put(FILENAME_COL, survey.getFileName());
 		updatedValues.put(DISP_NAME_COL, survey.getName());
+		updatedValues.put(PROJECT_COL, survey.getProjectId());
 		updatedValues.put(LANGUAGE_COL, survey.getLanguage() != null ? survey
 				.getLanguage().toLowerCase() : ConstantUtil.ENGLISH_CODE);
 		updatedValues.put(HELP_DOWNLOADED_COL, survey.isHelpDownloaded() ? "Y"
@@ -1058,7 +1068,7 @@ public class SurveyDbAdapter {
 		Survey survey = null;
 		Cursor cursor = database.query(SURVEY_TABLE, new String[] { PK_ID_COL,
 				DISP_NAME_COL, LOCATION_COL, FILENAME_COL, TYPE_COL,
-				LANGUAGE_COL, HELP_DOWNLOADED_COL }, PK_ID_COL + " = ?",
+				LANGUAGE_COL, HELP_DOWNLOADED_COL, PROJECT_COL }, PK_ID_COL + " = ?",
 				new String[] { surveyId }, null, null, null);
 		if (cursor != null) {
 			if (cursor.getCount() > 0) {
@@ -1067,6 +1077,8 @@ public class SurveyDbAdapter {
 				survey.setId(surveyId);
 				survey.setName(cursor.getString(cursor
 						.getColumnIndexOrThrow(DISP_NAME_COL)));
+				survey.setProjectId(cursor.getString(cursor
+						.getColumnIndexOrThrow(PROJECT_COL)));
 				survey.setLocation(cursor.getString(cursor
 						.getColumnIndexOrThrow(LOCATION_COL)));
 				survey.setFileName(cursor.getString(cursor
@@ -1082,6 +1094,86 @@ public class SurveyDbAdapter {
 		}
 
 		return survey;
+	}
+
+	/**
+	 * deletes all the projects from the database
+	 */
+	public void deleteAllProjects() {
+		database.delete(PROJECT_TABLE, null, null);
+	}
+
+	/**
+	 * Gets a single project from the db using its primary key
+	 */
+	public Project findProject(String projectId) {
+		Project project = null;
+		Cursor cursor = database.query(PROJECT_TABLE, new String[] { PK_ID_COL,
+				PROJECT_NAME_COL, PROJECT_COL}, PK_ID_COL + " = ?",
+				new String[] { projectId }, null, null, null);
+		if (cursor != null) {
+			if (cursor.getCount() > 0) {
+				cursor.moveToFirst();
+				project = new Project();
+				project.setProjectId(projectId);
+				project.setName(cursor.getString(cursor
+						.getColumnIndexOrThrow(PROJECT_NAME_COL)));
+			}
+			cursor.close();
+		}
+		return project;
+	}
+
+	/**
+	 * Lists all projects in the database
+	 */
+	public ArrayList<Project> listProjects() {
+		ArrayList<Project> projects = new ArrayList<Project>();
+		Cursor cursor = database.query(PROJECT_TABLE, new String[] { PK_ID_COL,
+				PROJECT_NAME_COL, PROJECT_COL}, null, null, null, null, null);
+		if (cursor != null) {
+			if (cursor.getCount() > 0) {
+				cursor.moveToFirst();
+				do {
+					Project project = new Project();
+					project.setProjectId(cursor.getString(cursor
+							.getColumnIndexOrThrow(PROJECT_COL)));
+					project.setName(cursor.getString(cursor
+							.getColumnIndexOrThrow(PROJECT_NAME_COL)));
+					projects.add(project);
+				} while (cursor.moveToNext());
+			}
+			cursor.close();
+		}
+		return projects;
+	}
+
+	/**
+	 * updates a projct in the db
+	 *
+	 * @param survey
+	 * @return
+	 */
+	public void saveProject(Project project) {
+		Cursor cursor = database.query(PROJECT_TABLE,
+				new String[] { PK_ID_COL }, PK_ID_COL + " = ?",
+				new String[] { project.getProjectId(), }, null, null, null);
+		ContentValues updatedValues = new ContentValues();
+		updatedValues.put(PK_ID_COL, project.getProjectId());
+		updatedValues.put(PROJECT_NAME_COL, project.getName());
+		updatedValues.put(PROJECT_COL, project.getProjectId());
+
+		if (cursor != null && cursor.getCount() > 0) {
+			// if we found an item, it's an update, otherwise, it's an insert
+			database.update(PROJECT_TABLE, updatedValues, PK_ID_COL + " = ?",
+					new String[] { project.getProjectId() });
+		} else {
+			database.insert(PROJECT_TABLE, null, updatedValues);
+		}
+
+		if (cursor != null) {
+			cursor.close();
+		}
 	}
 
 	/**
@@ -1181,6 +1273,50 @@ public class SurveyDbAdapter {
 					Survey survey = new Survey();
 					survey.setId(cursor.getString(cursor
 							.getColumnIndexOrThrow(PK_ID_COL)));
+					survey.setName(cursor.getString(cursor
+							.getColumnIndexOrThrow(DISP_NAME_COL)));
+					survey.setLocation(cursor.getString(cursor
+							.getColumnIndexOrThrow(LOCATION_COL)));
+					survey.setFileName(cursor.getString(cursor
+							.getColumnIndexOrThrow(FILENAME_COL)));
+					survey.setType(cursor.getString(cursor
+							.getColumnIndexOrThrow(TYPE_COL)));
+					survey.setHelpDownloaded(cursor.getString(cursor
+							.getColumnIndexOrThrow(HELP_DOWNLOADED_COL)));
+					survey.setLanguage(cursor.getString(cursor
+							.getColumnIndexOrThrow(LANGUAGE_COL)));
+					survey.setVersion(cursor.getDouble(cursor
+							.getColumnIndexOrThrow(VERSION_COL)));
+					surveys.add(survey);
+				} while (cursor.moveToNext());
+			}
+			cursor.close();
+		}
+		return surveys;
+	}
+
+	/**
+	 * Lists all non-deleted surveys from the database
+	 */
+	public ArrayList<Survey> listSurveysForProject(String projectId) {
+		ArrayList<Survey> surveys = new ArrayList<Survey>();
+		String whereClause = DELETED_COL + " <> ?";
+		String[] whereParams = null;
+		whereClause += " and " + PROJECT_COL + " = ?";
+		whereParams = new String[] { ConstantUtil.IS_DELETED, projectId };
+		Cursor cursor = database.query(SURVEY_TABLE, new String[] { PK_ID_COL,
+				DISP_NAME_COL, LOCATION_COL, FILENAME_COL, TYPE_COL,
+				LANGUAGE_COL, HELP_DOWNLOADED_COL, VERSION_COL, PROJECT_COL }, whereClause,
+				whereParams, null, null, null);
+		if (cursor != null) {
+			if (cursor.getCount() > 0) {
+				cursor.moveToFirst();
+				do {
+					Survey survey = new Survey();
+					survey.setId(cursor.getString(cursor
+							.getColumnIndexOrThrow(PK_ID_COL)));
+					survey.setProjectId(cursor.getString(cursor
+							.getColumnIndexOrThrow(PROJECT_COL)));
 					survey.setName(cursor.getString(cursor
 							.getColumnIndexOrThrow(DISP_NAME_COL)));
 					survey.setLocation(cursor.getString(cursor

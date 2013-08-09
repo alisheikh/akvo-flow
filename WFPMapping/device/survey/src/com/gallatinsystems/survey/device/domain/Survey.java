@@ -38,6 +38,7 @@ public class Survey {
 	private String location;
 	private String fileName;
 	private boolean helpDownloaded;
+	private String projectId;
 	private String language;
 
 	public String getLanguage() {
@@ -154,5 +155,13 @@ public class Survey {
 			questionGroups = new ArrayList<QuestionGroup>();
 		}
 		questionGroups.add(group);
+	}
+
+	public String getProjectId() {
+		return projectId;
+	}
+
+	public void setProjectId(String projectId) {
+		this.projectId = projectId;
 	}
 }
