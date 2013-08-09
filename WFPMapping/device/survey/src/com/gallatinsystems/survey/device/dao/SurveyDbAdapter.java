@@ -2165,18 +2165,19 @@ public class SurveyDbAdapter {
 
 		// location part
 		if (latitude != null && longitude != null){
-			PointF center = new PointF(latitude.floatValue(), longitude.floatValue());
-			PointF p1 = GeoUtil.calculateDerivedPosition(center, nearbyRadius, 0);
-			PointF p2 = GeoUtil.calculateDerivedPosition(center, nearbyRadius, 90);
-			PointF p3 = GeoUtil.calculateDerivedPosition(center, nearbyRadius, 180);
-			PointF p4 = GeoUtil.calculateDerivedPosition(center, nearbyRadius, 270);
-
-			whereClause += " AND sl." + LAT_COL + " >? AND sl." + LAT_COL + " <? AND sl."
-			        + LON_COL + " <? AND sl." + LON_COL + " >?";
-			whereValuesList.add(String.valueOf(p3.x));
-			whereValuesList.add(String.valueOf(p1.x));
-			whereValuesList.add(String.valueOf(p2.y));
-			whereValuesList.add(String.valueOf(p4.y));
+			// this disables the restriction on nearbyRadius. It guarantees that we also search points which have no lat/lon
+//			PointF center = new PointF(latitude.floatValue(), longitude.floatValue());
+//			PointF p1 = GeoUtil.calculateDerivedPosition(center, nearbyRadius, 0);
+//			PointF p2 = GeoUtil.calculateDerivedPosition(center, nearbyRadius, 90);
+//			PointF p3 = GeoUtil.calculateDerivedPosition(center, nearbyRadius, 180);
+//			PointF p4 = GeoUtil.calculateDerivedPosition(center, nearbyRadius, 270);
+//
+//			whereClause += " AND sl." + LAT_COL + " >? AND sl." + LAT_COL + " <? AND sl."
+//			        + LON_COL + " <? AND sl." + LON_COL + " >?";
+//			whereValuesList.add(String.valueOf(p3.x));
+//			whereValuesList.add(String.valueOf(p1.x));
+//			whereValuesList.add(String.valueOf(p2.y));
+//			whereValuesList.add(String.valueOf(p4.y));
 
 			// this is to correct the distance for the shortening at higher latitudes
 			Double fudge = Math.pow(Math.cos(Math.toRadians(latitude)),2);
