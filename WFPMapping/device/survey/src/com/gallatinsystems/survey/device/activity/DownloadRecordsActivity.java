@@ -18,6 +18,7 @@ package com.gallatinsystems.survey.device.activity;
 
 import com.gallatinsystems.survey.device.R;
 import com.gallatinsystems.survey.device.dao.SurveyDbAdapter;
+import com.gallatinsystems.survey.device.domain.Project;
 import com.gallatinsystems.survey.device.domain.Survey;
 import com.gallatinsystems.survey.device.service.RecordDataService;
 import com.gallatinsystems.survey.device.util.ConstantUtil;
@@ -43,12 +44,12 @@ public class DownloadRecordsActivity extends Activity {
 	public static final int SURVEY_ACTIVITY = 1;
 	private static final String TAG = "Download Records Activity";
 
-	private TextView surveyField;
+	private TextView projectField;
 	private TextView totalRecordsOnServerField;
 	private TextView cachedOnPhoneField;
 	private SurveyDbAdapter databaseAdapter;
 	private String userId;
-	private String surveyId;
+	private String projectId;
 
 	private Handler handler = new Handler() {
 		@Override
@@ -69,7 +70,7 @@ public class DownloadRecordsActivity extends Activity {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.downloadrecords);
 
-		surveyField = (TextView) findViewById(R.id.surveyField);
+		projectField = (TextView) findViewById(R.id.projectField);
 		totalRecordsOnServerField = (TextView) findViewById(R.id.totalonserver);
 		cachedOnPhoneField = (TextView) findViewById(R.id.cachedonphone);
 
@@ -87,11 +88,11 @@ public class DownloadRecordsActivity extends Activity {
 					.getString(ConstantUtil.USER_ID_KEY) : null;
 		}
 
-		surveyId = extras != null ? extras
-				.getString(ConstantUtil.SURVEY_ID_KEY) : null;
-		if (surveyId == null) {
-			surveyId = savedInstanceState != null ? savedInstanceState
-					.getString(ConstantUtil.SURVEY_ID_KEY) : "1";
+		projectId = extras != null ? extras
+				.getString(ConstantUtil.PROJECT_ID_KEY) : null;
+		if (projectId == null) {
+			projectId = savedInstanceState != null ? savedInstanceState
+					.getString(ConstantUtil.PROJECT_ID_KEY) : "1";
 		}
 
 		populateFields();
@@ -102,15 +103,15 @@ public class DownloadRecordsActivity extends Activity {
 	 */
 	private void populateFields() {
 
-		Survey surveyFromDb = databaseAdapter.findSurvey(surveyId);
-		surveyField.setText(surveyFromDb.getName());
+		Project projectFromDb = databaseAdapter.findProject(projectId);
+		projectField.setText(projectFromDb.getName());
 		
 		cachedOnPhoneField.setText(Integer.toString(databaseAdapter.countSurveyedLocale()));
 		
 		Intent intent = new Intent(this, RecordDataService.class);
 		Messenger messenger = new Messenger(handler);
 		intent.putExtra("MESSENGER", messenger);
-		intent.putExtra(ConstantUtil.SURVEY_ID_KEY, surveyId);
+		intent.putExtra(ConstantUtil.PROJECT_ID_KEY, projectId);
 		intent.putExtra("ACTION", "getcount");
 		startService(intent);
 
@@ -120,7 +121,7 @@ public class DownloadRecordsActivity extends Activity {
 		Intent intent = new Intent(this, RecordDataService.class);
 		Messenger messenger = new Messenger(handler);
 		intent.putExtra("MESSENGER", messenger);
-		intent.putExtra(ConstantUtil.SURVEY_ID_KEY, surveyId);
+		intent.putExtra(ConstantUtil.PROJECT_ID_KEY, projectId);
 		intent.putExtra("ACTION", "getrecords");
 		startService(intent);
 	}

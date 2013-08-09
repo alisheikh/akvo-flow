@@ -81,13 +81,12 @@ public class RecordDataService extends IntentService {
 		String action = null;
 		props = new PropertyUtil(getResources());
 		if (intent != null) {
-			String surveyId = null;
+			String projectId = null;
 			if (intent.getExtras() != null) {
-				surveyId = intent.getExtras().getString(
-						ConstantUtil.SURVEY_ID_KEY);
+				projectId = intent.getExtras().getString(
+						ConstantUtil.PROJECT_ID_KEY);
 				action = intent.getExtras().getString("ACTION");
 				// FIXME for now the project id is the same as the survey id.
-				String projectId = surveyId;
 				if (isAbleToRun() && action != null) {
 					try {
 						lock.acquire();
