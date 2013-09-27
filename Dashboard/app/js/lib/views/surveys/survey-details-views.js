@@ -9,6 +9,7 @@ FLOW.SurveySidebarView = FLOW.View.extend({
 	project:null,
 	projectName:null,
 	projectAlreadyExists:false,
+	updateOnlyFLag: false,
 
 	init: function() {
 		var pointType = null,
@@ -17,6 +18,7 @@ FLOW.SurveySidebarView = FLOW.View.extend({
 		this._super();
 		this.set('surveyTitle', FLOW.selectedControl.selectedSurvey.get('name'));
 		this.set('surveyDescription', FLOW.selectedControl.selectedSurvey.get('description'));
+		this.set('updateOnlyFlag', FLOW.selectedControl.selectedSurvey.get('updateOnlyFlag'));
 
 		FLOW.surveyPointTypeControl.get('content').forEach(function(item) {
 			if(item.get('value') == FLOW.selectedControl.selectedSurvey.get('pointType')) {
@@ -45,6 +47,7 @@ FLOW.SurveySidebarView = FLOW.View.extend({
 		return !Ember.none(FLOW.selectedControl.selectedSurvey.get('keyId'));
 	}.property('FLOW.selectedControl.selectedSurvey.keyId'),
 
+	// TODO add updateOnlyFLag
 	setIsDirty: function() {
 		var isDirty, survey;
 		survey = FLOW.selectedControl.get('selectedSurvey');
@@ -133,6 +136,7 @@ FLOW.SurveySidebarView = FLOW.View.extend({
 		survey.set('path', FLOW.selectedControl.selectedSurveyGroup.get('code'));
 		survey.set('description', this.get('surveyDescription'));
 		survey.set('newProjectName', this.get('projectName'));
+		survey.set('updateOnlyFlag', this.get('updateOnlyFlag'));
 
 		if(!Ember.none(this.get('project'))){
 			survey.set('projectId', this.project.get('keyId'));

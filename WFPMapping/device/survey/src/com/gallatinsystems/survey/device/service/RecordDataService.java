@@ -194,6 +194,7 @@ public class RecordDataService extends IntentService {
 				JSONObject jsonObj = new JSONObject(response);
 
 				// save meta info
+				Log.v("RECORDS", response);
 				JSONObject recordsMeta = jsonObj.getJSONObject("recordsMeta");
 				JSONArray questionIdsArray = new JSONArray(recordsMeta.getString("questionIds"));
 				JSONArray metricIdsArray = new JSONArray(recordsMeta.getString("metricIds"));

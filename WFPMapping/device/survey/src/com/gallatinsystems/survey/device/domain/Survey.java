@@ -40,6 +40,7 @@ public class Survey {
 	private boolean helpDownloaded;
 	private String projectId;
 	private String language;
+	private String updateOnlyFlag;
 
 	public String getLanguage() {
 		return language;
@@ -164,4 +165,14 @@ public class Survey {
 	public void setProjectId(String projectId) {
 		this.projectId = projectId;
 	}
+
+	public String getUpdateOnlyFlag() {
+		return updateOnlyFlag;
+	}
+
+	public void setUpdateOnlyFlag(String updateOnlyFlag) {
+		this.updateOnlyFlag = updateOnlyFlag;
+	}
+
+	
 }

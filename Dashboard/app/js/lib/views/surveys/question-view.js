@@ -144,6 +144,7 @@ FLOW.QuestionView = FLOW.View.extend({
 		}
 
 		// set the attribute to the original choice
+		console.log('metricid: ', FLOW.selectedControl.selectedQuestion.get('metricId'));
 		FLOW.attributeControl.get('content').forEach(function(item) {
 			if(item.get('keyId') == FLOW.selectedControl.selectedQuestion.get('metricId')) {
 				attribute = item;

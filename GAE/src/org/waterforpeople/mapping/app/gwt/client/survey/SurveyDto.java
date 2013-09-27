@@ -40,6 +40,7 @@ public class SurveyDto extends BaseDto implements NamedObject {
 	private String pointType;
 	private String defaultLanguageCode;
 	private Boolean requireApproval;
+	private Boolean updateOnlyFlag;
 	private Date createdDateTime;
 	private Date lastUpdateDateTime;
 	private Long sourceId = null;
@@ -212,6 +213,14 @@ public class SurveyDto extends BaseDto implements NamedObject {
 
 	public void setProjects(List<Long> projects) {
 		this.projects = projects;
+	}
+
+	public Boolean getUpdateOnlyFlag() {
+		return updateOnlyFlag;
+	}
+
+	public void setUpdateOnlyFlag(Boolean updateOnlyFlag) {
+		this.updateOnlyFlag = updateOnlyFlag;
 	}
 
 }

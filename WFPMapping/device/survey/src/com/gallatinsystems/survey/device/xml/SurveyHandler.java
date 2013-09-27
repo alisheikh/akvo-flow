@@ -44,6 +44,7 @@ import com.gallatinsystems.survey.device.util.StringUtil;
 public class SurveyHandler extends DefaultHandler {
 
 	private static final String DEFAULT_LANG = "defaultLanguageCode";
+	private static final String UPDATE_ONLY_FLAG = "updateOnlyFlag";
 	private static final String QUESTION_GROUP = "questionGroup";
 	private static final String HEADING = "heading";
 	private static final String QUESTION = "question";
@@ -222,6 +223,12 @@ public class SurveyHandler extends DefaultHandler {
 				survey.setLanguage(attributes.getValue(DEFAULT_LANG));
 			} else {
 				survey.setLanguage(ConstantUtil.ENGLISH_CODE);
+			}
+			
+			if (attributes.getValue(UPDATE_ONLY_FLAG) != null) {
+				survey.setUpdateOnlyFlag(attributes.getValue(UPDATE_ONLY_FLAG).equals("true") ? "true" : "false");
+			} else {
+				survey.setUpdateOnlyFlag("false");
 			}
 		} else if (localName.equalsIgnoreCase(QUESTION_GROUP)) {
 			currentQuestionGroup = new QuestionGroup();

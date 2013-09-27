@@ -99,6 +99,7 @@ public class SurveyDbAdapter {
 	public static final String TRANS_START_COL = "trans_start_date";
 	public static final String EXPORTED_FLAG_COL = "exported_flag";
 	public static final String UUID_COL = "uuid";
+	public static final String UPDATE_ONLY_FLAG_COL = "update_only_flag";
 
 	// surveyed locale cols. Lat, Lon, status, answer defined above
 	public static final String PROJECT_COL = "project_id";
@@ -119,7 +120,7 @@ public class SurveyDbAdapter {
 	 * Database creation sql statement
 	 */
 	private static final String SURVEY_TABLE_CREATE = "create table survey (_id integer primary key, "
-			+ "display_name text not null, project_id text, version real, type text, location text, filename text, language, help_downloaded_flag text, deleted_flag text);";
+			+ "display_name text not null, project_id text, version real, type text, location text, filename text, language text, help_downloaded_flag text, deleted_flag text, update_only_flag text);";
 
 	private static final String SURVEY_RESPONDENT_CREATE = "create table survey_respondent (_id integer primary key autoincrement, "
 			+ "survey_id integer not null, submitted_flag text, submitted_date text, delivered_date text, user_id integer, media_sent_flag text, status text, saved_date long, exported_flag text, uuid text);";
@@ -190,7 +191,7 @@ public class SurveyDbAdapter {
 	private static final String PLOT_JOIN = "plot LEFT OUTER JOIN plot_point ON (plot._id = plot_point.plot_id) LEFT OUTER JOIN user ON (user._id = plot.user_id)";
 	private static final String RESPONDENT_JOIN = "survey_respondent LEFT OUTER JOIN survey ON (survey_respondent.survey_id = survey._id)";
 
-	private static final int DATABASE_VERSION = 80;
+	private static final int DATABASE_VERSION = 82;
 
 	private final Context context;
 
@@ -327,7 +328,7 @@ public class SurveyDbAdapter {
 					runSQL("insert into preferences values('remoteexception.upload','0')",
 							db);
 				}
-			} else if (oldVersion < 80){
+			} else if (oldVersion < 82){
 				db.execSQL("DROP TABLE IF EXISTS " + SURVEYED_LOCALE_TABLE);
 				db.execSQL("DROP TABLE IF EXISTS " + SURVEYED_LOCALE_VAL_TABLE);
 				db.execSQL("DROP TABLE IF EXISTS " + RECORD_META_TABLE);
@@ -1009,6 +1010,22 @@ public class SurveyDbAdapter {
 		return outOfDateSurveys;
 	}
 
+	/* 
+	* updates the survey table by recording updateOnlyFlag
+	 * 
+	 * @param surveyId, updateOnlyFlag
+	 */
+	public void setUpdateOnlyFlag(String surveyId, String updateOnlyFlag) {
+		ContentValues updatedValues = new ContentValues();
+		updatedValues.put(UPDATE_ONLY_FLAG_COL, updateOnlyFlag);
+
+		if (database.update(SURVEY_TABLE, updatedValues, PK_ID_COL + " = ?",
+				new String[] { surveyId }) < 1) {
+			Log.e(TAG, "Could not update record for Survey " + surveyId);
+		}
+	}
+	
+	
 	/**
 	 * updates the survey table by recording the help download flag
 	 * 
@@ -1047,6 +1064,7 @@ public class SurveyDbAdapter {
 		updatedValues.put(HELP_DOWNLOADED_COL, survey.isHelpDownloaded() ? "Y"
 				: "N");
 		updatedValues.put(DELETED_COL, ConstantUtil.NOT_DELETED);
+		updatedValues.put(UPDATE_ONLY_FLAG_COL,survey.getUpdateOnlyFlag());
 
 		if (cursor != null && cursor.getCount() > 0) {
 			// if we found an item, it's an update, otherwise, it's an insert
@@ -1068,7 +1086,7 @@ public class SurveyDbAdapter {
 		Survey survey = null;
 		Cursor cursor = database.query(SURVEY_TABLE, new String[] { PK_ID_COL,
 				DISP_NAME_COL, LOCATION_COL, FILENAME_COL, TYPE_COL,
-				LANGUAGE_COL, HELP_DOWNLOADED_COL, PROJECT_COL }, PK_ID_COL + " = ?",
+				LANGUAGE_COL, HELP_DOWNLOADED_COL, PROJECT_COL, UPDATE_ONLY_FLAG_COL }, PK_ID_COL + " = ?",
 				new String[] { surveyId }, null, null, null);
 		if (cursor != null) {
 			if (cursor.getCount() > 0) {
@@ -1089,6 +1107,8 @@ public class SurveyDbAdapter {
 						.getColumnIndexOrThrow(HELP_DOWNLOADED_COL)));
 				survey.setLanguage(cursor.getString(cursor
 						.getColumnIndexOrThrow(LANGUAGE_COL)));
+				survey.setUpdateOnlyFlag(cursor.getString(cursor
+						.getColumnIndexOrThrow(UPDATE_ONLY_FLAG_COL)));
 			}
 			cursor.close();
 		}
@@ -1264,7 +1284,7 @@ public class SurveyDbAdapter {
 		}
 		Cursor cursor = database.query(SURVEY_TABLE, new String[] { PK_ID_COL,
 				DISP_NAME_COL, LOCATION_COL, FILENAME_COL, TYPE_COL,
-				LANGUAGE_COL, HELP_DOWNLOADED_COL, VERSION_COL }, whereClause,
+				LANGUAGE_COL, HELP_DOWNLOADED_COL, VERSION_COL, UPDATE_ONLY_FLAG_COL }, whereClause,
 				whereParams, null, null, null);
 		if (cursor != null) {
 			if (cursor.getCount() > 0) {
@@ -1287,6 +1307,8 @@ public class SurveyDbAdapter {
 							.getColumnIndexOrThrow(LANGUAGE_COL)));
 					survey.setVersion(cursor.getDouble(cursor
 							.getColumnIndexOrThrow(VERSION_COL)));
+					survey.setUpdateOnlyFlag(cursor.getString(cursor
+							.getColumnIndexOrThrow(UPDATE_ONLY_FLAG_COL)));
 					surveys.add(survey);
 				} while (cursor.moveToNext());
 			}
@@ -1306,7 +1328,7 @@ public class SurveyDbAdapter {
 		whereParams = new String[] { ConstantUtil.IS_DELETED, projectId };
 		Cursor cursor = database.query(SURVEY_TABLE, new String[] { PK_ID_COL,
 				DISP_NAME_COL, LOCATION_COL, FILENAME_COL, TYPE_COL,
-				LANGUAGE_COL, HELP_DOWNLOADED_COL, VERSION_COL, PROJECT_COL }, whereClause,
+				LANGUAGE_COL, HELP_DOWNLOADED_COL, VERSION_COL, PROJECT_COL, UPDATE_ONLY_FLAG_COL}, whereClause,
 				whereParams, null, null, null);
 		if (cursor != null) {
 			if (cursor.getCount() > 0) {
@@ -1331,6 +1353,8 @@ public class SurveyDbAdapter {
 							.getColumnIndexOrThrow(LANGUAGE_COL)));
 					survey.setVersion(cursor.getDouble(cursor
 							.getColumnIndexOrThrow(VERSION_COL)));
+					survey.setUpdateOnlyFlag(cursor.getString(cursor
+							.getColumnIndexOrThrow(UPDATE_ONLY_FLAG_COL)));
 					surveys.add(survey);
 				} while (cursor.moveToNext());
 			}

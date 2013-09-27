@@ -53,6 +53,7 @@ public class Survey extends BaseDomain {
 	private String pointType;
 	private String defaultLanguageCode;
 	private Boolean requireApproval;
+	private Boolean updateOnlyFlag;
 
 	public enum Status {
 		PUBLISHED, NOT_PUBLISHED, IMPORTED, VERIFIED
@@ -204,6 +205,14 @@ public class Survey extends BaseDomain {
 
 	public void setProjectId(Long projectId) {
 		this.projectId = projectId;
+	}
+
+	public Boolean getUpdateOnlyFlag() {
+		return updateOnlyFlag;
+	}
+
+	public void setUpdateOnlyFlag(Boolean updateOnlyFlag) {
+		this.updateOnlyFlag = updateOnlyFlag;
 	}
 
 }

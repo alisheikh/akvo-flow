@@ -57,6 +57,9 @@ FLOW.Survey = FLOW.BaseModel.extend({
   sector: DS.attr('string'),
   code: DS.attr('string'),
   requireApproval: DS.attr('string'),
+  updateOnlyFlag: DS.attr('boolean', {
+	    defaultValue: false
+	  }),
   version: DS.attr('string'),
   description: DS.attr('string'),
   name: DS.attr('string'),

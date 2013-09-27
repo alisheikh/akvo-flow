@@ -233,7 +233,14 @@ public class SurveyOverviewActivity extends Activity implements OnItemClickListe
 	@Override
 	public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
 		Survey survey = menuViewAdapter.getSelectedSurvey(position);
-		if (survey != null ) {
+		if (survey != null ) {		
+
+			if (survey.getUpdateOnlyFlag().equals("true") && selectedLocale == null){
+				Toast.makeText(this, "for this form, you need to select a record first",
+						Toast.LENGTH_LONG).show();
+				return;
+			}
+		
 			if (selectedLocale != null){
 				SurveyedLocale localeFromDb = databaseAdapter.findSurveyedLocale(selectedLocale);
 

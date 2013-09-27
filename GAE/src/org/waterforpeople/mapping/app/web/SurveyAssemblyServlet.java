@@ -280,7 +280,11 @@ public class SurveyAssemblyServlet extends AbstractRestApiServlet {
 		}
 		final String version = s.getVersion() == null ? "" : "version='"
 				+ s.getVersion() + "'";
-		surveyHeader += " defaultLanguageCode='" + lang + "' " + version + ">";
+		String updateOnlyString="";
+		if (s != null && s.getUpdateOnlyFlag() != null) {
+			updateOnlyString = " updateOnlyFlag='" + (s.getUpdateOnlyFlag() ? "true" : "false") + "'";
+		}
+		surveyHeader += " defaultLanguageCode='" + lang + "' " + version + updateOnlyString + ">";
 		String surveyFooter = "</survey>";
 		QuestionGroupDao qgDao = new QuestionGroupDao();
 		TreeMap<Integer, QuestionGroup> qgList = qgDao

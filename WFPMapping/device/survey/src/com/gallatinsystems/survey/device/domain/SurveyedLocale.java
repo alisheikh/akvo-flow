@@ -98,7 +98,7 @@ public class SurveyedLocale implements Serializable {
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		if (localeUniqueId != null) {
-			builder.append("Id: ").append(localeUniqueId);
+			builder.append("Id: ").append(localeUniqueId.substring(0,5));
 		}	
 		if (distance != null){
 			// default: no decimal point, km as unit

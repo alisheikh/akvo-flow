@@ -327,6 +327,15 @@ public class SurveyDownloadService extends Service {
 				}
 				Survey hydratedSurvey = SurveyDao.loadSurvey(survey, in);
 				if (hydratedSurvey != null) {
+					
+					// first save updateOnlyFlag
+					if(hydratedSurvey.getUpdateOnlyFlag() != null){
+						databaseAdaptor.setUpdateOnlyFlag(survey.getId(), hydratedSurvey.getUpdateOnlyFlag().equals("true") ? "true" : "false");
+					} else {
+						databaseAdaptor.setUpdateOnlyFlag(survey.getId(),"false");
+					}
+					
+					// TODO here we have to set the updateOnlyFlag
 					// collect files in a set just in case the same binary is
 					// used in multiple questions
 					// we only need to download once
@@ -515,6 +524,7 @@ public class SurveyDownloadService extends Service {
 					+ IMEI_PARAM + URLEncoder.encode(StatusUtil.getImei(this), "UTF-8")
 					+ (deviceId != null ? DEV_ID_PARAM + URLEncoder.encode(deviceId, "UTF-8") : ""));
 			if (response != null) {
+				Log.v("DOWNLOAD SERVICE", response);
 				StringTokenizer strTok = new StringTokenizer(response, "\n");
 				while (strTok.hasMoreTokens()) {
 					String currentLine = strTok.nextToken();

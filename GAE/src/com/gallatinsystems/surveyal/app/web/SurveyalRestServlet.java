@@ -444,6 +444,7 @@ public class SurveyalRestServlet extends AbstractRestApiServlet {
 			boolean loadedItems = false;
 			List<Question> questionList = null;
 			// initialize outside the loop so all answers get same collection
+			
 			// date value
 			Calendar cal = new GregorianCalendar();
 			for (QuestionAnswerStore ans : answers) {
@@ -451,10 +452,10 @@ public class SurveyalRestServlet extends AbstractRestApiServlet {
 
 					questionList = qDao
 							.listQuestionsBySurvey(ans.getSurveyId());
-					metrics = metricDao.listMetrics(null, null, null,
-							l.getOrganization(), "all");
-					mappings = metricMappingDao.listMappingsBySurvey(ans
-							.getSurveyId());
+					//metrics = metricDao.listMetrics(null, null, null,
+					//		l.getOrganization(), "all");
+					//mappings = metricMappingDao.listMappingsBySurvey(ans
+					//		.getSurveyId());
 					loadedItems = true;
 				}
 				SurveyalValue val = null;
@@ -493,22 +494,22 @@ public class SurveyalRestServlet extends AbstractRestApiServlet {
 						// no-op
 					}
 				}
-				if (metrics != null && mappings != null) {
-					metriccheck: for (SurveyMetricMapping mapping : mappings) {
-						if (ans.getQuestionID() != null
-								&& Long.parseLong(ans.getQuestionID()) == mapping
-										.getSurveyQuestionId()) {
-							for (Metric m : metrics) {
-								if (mapping.getMetricId() == m.getKey().getId()) {
-									val.setMetricId(m.getKey().getId());
-									val.setMetricName(m.getName());
-									val.setMetricGroup(m.getGroup());
-									break metriccheck;
-								}
-							}
-						}
-					}
-				}
+//				if (metrics != null && mappings != null) {
+//					metriccheck: for (SurveyMetricMapping mapping : mappings) {
+//						if (ans.getQuestionID() != null
+//								&& Long.parseLong(ans.getQuestionID()) == mapping
+//										.getSurveyQuestionId()) {
+//							for (Metric m : metrics) {
+//								if (mapping.getMetricId() == m.getKey().getId()) {
+//									val.setMetricId(m.getKey().getId());
+//									val.setMetricName(m.getName());
+//									val.setMetricGroup(m.getGroup());
+//									break metriccheck;
+//								}
+//							}
+//						}
+//					}
+//				}
 				// TODO: resolve score
 				val.setOrganization(l.getOrganization());
 				val.setSublevel1(l.getSublevel1());

@@ -23,6 +23,7 @@ FLOW.attributeControl = Ember.ArrayController.create({
 
   setProjectMetrics: function () {
 	 var pId;
+	 console.log('trying to find metrics');
 	 if (!Ember.none(FLOW.selectedControl.get('selectedSurvey'))){
 		 pId = FLOW.selectedControl.selectedSurvey.get('projectId');
 		 this.set('projectContent', FLOW.store.filter(FLOW.Metric, function(item) {

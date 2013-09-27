@@ -21,9 +21,8 @@
       </label>
       <label class="propNamel">{{t _create_new_project}}: {{view Ember.TextField valueBinding="view.projectName" size=10 }}</label>
       {{#if view.projectAlreadyExists}} <font color="red">Project already exists, please choose a unique name</font>{{/if}}
-
     </div>
-
+  <label class="labelcheckbox">{{view Ember.Checkbox checkedBinding="view.updateOnlyFlag"}}{{t _needs_existing_record}}</label>
 	  <dl class="floats-in">
               <dt>{{t _version_number}}:</dt>
               <dd><span id="versionNbr">{{FLOW.selectedControl.selectedSurvey.version}}</span>{{tooltip _version_numbers_helps}}</dd>

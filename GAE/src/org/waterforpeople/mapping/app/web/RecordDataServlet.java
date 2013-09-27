@@ -191,6 +191,7 @@ public class RecordDataServlet extends AbstractRestApiServlet {
 			JSONObject meta = result.getJSONObject("recordsMeta");
 			if (meta != null){
 				meta.put("questionIds", rdResp.getRecordsMeta().getQuestionIds());
+				meta.put("metricIds", rdResp.getRecordsMeta().getMetricIds());
 				meta.put("metricNames", rdResp.getRecordsMeta().getMetricNames());
 				meta.put("includeInList", rdResp.getRecordsMeta().getIncludeInList());
 			}
