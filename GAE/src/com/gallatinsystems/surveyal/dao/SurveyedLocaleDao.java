@@ -118,7 +118,23 @@ public class SurveyedLocaleDao extends BaseDAO<SurveyedLocale> {
 		return listByProperty("surveyedLocaleId", surveyedLocaleId, "Long",
 				SurveyalValue.class);
 	}
-
+	
+	/**
+	 * lists all SurveyalValues for a list of surveyedLocales
+	 * (max 30 due to GAE limitations) 
+	 * 
+	 * @param surveyedLocaleId
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public List<SurveyalValue> listValuesByLocales(List<Long> surveyedLocaleIds) {
+		PersistenceManager pm = PersistenceFilter.getManager();
+		String queryString = ":p1.contains(surveyedLocaleId)";
+		javax.jdo.Query query = pm.newQuery(SurveyalValue.class,queryString);
+		List<SurveyalValue> results = (List<SurveyalValue>) query.execute(surveyedLocaleIds);	
+		return results;
+	}
+	
 	/**
 	 * lists all locales that match the geo constraints passed in
 	 * 
